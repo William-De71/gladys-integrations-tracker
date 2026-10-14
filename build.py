@@ -32,6 +32,8 @@ OUT = ROOT / "site"
 
 GIST_ID = "9c4ba77a0faa47c4ea67c74351db9094"
 GIST_URL = f"https://gist.github.com/Pierre-Gilles/{GIST_ID}"
+# The raw URL needs no token: the Actions GITHUB_TOKEN cannot read the gists API.
+GIST_CSV = f"https://gist.githubusercontent.com/Pierre-Gilles/{GIST_ID}/raw/3_full-list.csv"
 STORE_INDEX = "https://integration-store-storage.gladysassistant.com/index.json"
 STORE_PAGE = "https://gladysassistant.com/fr/docs/integrations/external/"
 FORUM_TOPIC = "https://community.gladysassistant.com/t/10385"
@@ -57,7 +59,10 @@ def fetch(url):
 
 
 def gh_api(*args):
-    return subprocess.run(["gh", "api", *args], check=True, capture_output=True, text=True).stdout
+    result = subprocess.run(["gh", "api", *args], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"gh api {' '.join(args)}: {result.stderr.strip()}")
+    return result.stdout
 
 
 def read_table(path):
@@ -70,9 +75,7 @@ def read_table(path):
 
 
 def load_ha_list():
-    gist = json.loads(gh_api(f"gists/{GIST_ID}"))
-    content = gist["files"]["3_full-list.csv"]["content"]
-    return list(csv.DictReader(io.StringIO(content)))
+    return list(csv.DictReader(io.StringIO(fetch(GIST_CSV))))
 
 
 def find_cover(repo, branch):
@@ -111,7 +114,7 @@ def load_gladys():
         if line and not line.startswith("#") and line.lower() not in repos:
             try:
                 candidates.append((json.loads(gh_api(f"repos/{line}")), NO_TOPIC))
-            except subprocess.CalledProcessError:
+            except RuntimeError:
                 print(f"repository not found: {line}", file=sys.stderr)
 
     new = []
