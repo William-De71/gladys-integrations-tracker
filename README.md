@@ -33,6 +33,8 @@ Sans le template, le topic `gladys-integration-wip` fait le même effet : le sto
 | Publiée (store) | indexée par le [store Gladys](https://gladysassistant.com/fr/docs/integrations/external/) |
 | Topic store posé, pas encore indexée | dépôt avec le topic du store, pas encore indexé (ou refusé par l'indexeur) |
 | En cours (dépôt GitHub) | dépôt créé depuis le template, ou avec le topic `gladys-integration-wip` |
+| Hors store, inactive | dépôt hors store sans commit depuis plus de 30 jours : l'intégration existe et compte pour l'idée, sauf si c'est une copie du template jamais remplie |
+| Archivée ou supprimée | dépôt archivé ou supprimé sur GitHub, même si le store le liste encore : ne compte plus pour l'idée |
 | Revendiquée (forum) | annoncée sur le forum, aucun dépôt trouvé |
 | Libre | personne dessus à notre connaissance |
 

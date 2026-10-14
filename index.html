@@ -110,6 +110,8 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); white-space: n
 .s-no_topic { color: var(--notopic); background: var(--notopic-bg); }
 .s-claimed { color: var(--claimed); background: var(--claimed-bg); }
 .s-free { color: var(--free); background: var(--free-bg); }
+.s-inactive { color: var(--muted); background: var(--surface-2); border: 1px dashed var(--border); }
+.s-archived { color: var(--free); background: var(--free-bg); text-decoration: line-through; }
 .dup { color: var(--dup); background: var(--dup-bg); }
 .prio { font-weight: 700; font-size: 12px; }
 .gl { display: flex; gap: 10px; align-items: center; min-width: 240px; }
@@ -208,8 +210,8 @@ footer a { color: var(--muted); text-decoration: underline; }
       cNum: "N°", cPrio: "Prio", cHa: "Intégration Home Assistant", cCat: "Catégorie", cUsage: "Usage HA",
       cStatus: "Statut", cGladys: "Intégration Gladys", cCover: "Cover", cName: "Intégration", cAuthor: "Auteur",
       cVersion: "Version", cHaEq: "Équivalent dans la liste", cSince: "Vue depuis",
-      st: { store: "Publiée", topic: "Pas encore au store", no_topic: "En cours", claimed: "Revendiquée", free: "Libre" },
-      partial: "partielle", auto: "auto, même nom", dup: "doublon", dupWith: "doublon avec", outside: "hors liste", noCover: "pas de cover",
+      st: { store: "Publiée", topic: "Pas encore au store", no_topic: "En cours", inactive: "Hors store, inactive", claimed: "Revendiquée", free: "Libre", archived: "Archivée" },
+      lastCommit: "dernier commit le", template: "template jamais rempli", partial: "partielle", auto: "auto, même nom", dup: "doublon", dupWith: "doublon avec", outside: "hors liste", noCover: "pas de cover",
       footer: function (d) {
         return "Généré le " + d + ". Sources : ";
       },
@@ -237,8 +239,8 @@ footer a { color: var(--muted); text-decoration: underline; }
       cNum: "#", cPrio: "Prio", cHa: "Home Assistant integration", cCat: "Category", cUsage: "HA usage",
       cStatus: "Status", cGladys: "Gladys integration", cCover: "Cover", cName: "Integration", cAuthor: "Author",
       cVersion: "Version", cHaEq: "Match in the list", cSince: "Seen since",
-      st: { store: "Published", topic: "Not in the store yet", no_topic: "In progress", claimed: "Claimed", free: "Free" },
-      partial: "partial", auto: "auto, same name", dup: "duplicate", dupWith: "duplicate of", outside: "not in the list", noCover: "no cover",
+      st: { store: "Published", topic: "Not in the store yet", no_topic: "In progress", inactive: "Not in store, inactive", claimed: "Claimed", free: "Free", archived: "Archived" },
+      lastCommit: "last commit on", template: "template never filled in", partial: "partial", auto: "auto, same name", dup: "duplicate", dupWith: "duplicate of", outside: "not in the list", noCover: "no cover",
       footer: function (d) {
         return "Generated on " + d + ". Sources: ";
       },
@@ -250,7 +252,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     }
   };
 
-  var STATUS_ORDER = ["store", "topic", "no_topic", "claimed", "free"];
+  var STATUS_ORDER = ["store", "topic", "no_topic", "inactive", "claimed", "free", "archived"];
   var state = { lang: "fr", tab: "ha", sort: { ha: ["n", 1], gl: ["status", 1] } };
   var data = null, byRepo = {}, haByNum = {};
 
@@ -332,7 +334,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     var p1 = ha.filter(function (h) { return h.prio === "P1"; });
     var p1Taken = p1.filter(function (h) { return h.status !== "free"; }).length;
     var inStore = data.gladys.filter(function (g) { return g.status === "store"; }).length;
-    var wip = data.gladys.length - inStore;
+    var wip = data.gladys.filter(function (g) { return g.status === "topic" || g.status === "no_topic"; }).length;
     var dup = data.gladys.filter(function (g) { return g.dups.length; }).length;
     function tile(value, label, ratio) {
       return '<div class="stat"><b>' + value + "</b><span>" + esc(label) + "</span>" +
@@ -420,7 +422,10 @@ footer a { color: var(--muted); text-decoration: underline; }
       '<td><span class="ha-name">' + esc(g.name) + '</span><div class="small">' + repoLink(g.repo) + "</div>" +
       '<div class="small">' + esc(state.lang === "fr" ? g.desc_fr : g.desc_en) + "</div></td>" +
       '<td><a href="https://github.com/' + esc(g.author) + '" target="_blank" rel="noopener">' + esc(g.author) + "</a></td>" +
-      "<td>" + badge(g.status) + "</td>" +
+      "<td>" + badge(g.status) + (g.status === "inactive"
+        ? '<div class="small">' + esc(t("lastCommit")) + " " + esc(g.pushed) +
+          (g.template ? "<br>" + esc(t("template")) : "") + "</div>"
+        : "") + "</td>" +
       '<td class="num">' + esc(g.version) + "</td>" +
       "<td>" + ha + "</td>" +
       '<td class="num">' + esc(g.since) + "</td></tr>";

@@ -8,6 +8,7 @@ Everything is found again on every run, with nothing to maintain by hand:
   - GitHub repositories named "gladys…" that contain a gladys-assistant-integration.json manifest
     (every repository created from the integration template has one), or that have the
     gladys-integration-wip topic: integrations in progress, which the store ignores;
+  - archived or deleted repositories, checked on GitHub itself (the store index can lag behind);
   - HA list ↔ Gladys matches: integrations whose names are the same are matched automatically.
 
 Optional corrections, never required:
@@ -27,7 +28,7 @@ import sys
 import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -56,15 +57,20 @@ USER_AGENT = "gladys-integrations-tracker"
 WORKFLOW_PAGE = "https://github.com/William-De71/gladys-integrations-tracker/actions/workflows/build.yml"
 
 # Status keys, from the most to the least advanced. The page and the workbook translate them.
-STORE, TOPIC_ONLY, NO_TOPIC, CLAIMED, FREE = "store", "topic", "no_topic", "claimed", "free"
+STORE, TOPIC_ONLY, NO_TOPIC, INACTIVE, ARCHIVED = "store", "topic", "no_topic", "inactive", "archived"
+CLAIMED, FREE = "claimed", "free"
 STATUS_FR = {
     STORE: "Publiée (store)",
     TOPIC_ONLY: "Topic store posé, pas encore indexée",
     NO_TOPIC: "En cours (dépôt GitHub)",
+    INACTIVE: "Hors store, inactive",
     CLAIMED: "Revendiquée (forum)",
     FREE: "Libre",
+    ARCHIVED: "Archivée ou supprimée",
 }
-RANK = [STORE, TOPIC_ONLY, NO_TOPIC]
+RANK = [STORE, TOPIC_ONLY, NO_TOPIC, INACTIVE, ARCHIVED]
+# A repository outside the store with no commit for this long is no longer "in progress".
+INACTIVE_AFTER = timedelta(days=30)
 QUALITY_FR = {"E": "Équivalente", "P": "Partielle", "A": "Automatique (même nom)"}
 
 
@@ -171,9 +177,12 @@ def load_gladys():
             if status == NO_TOPIC and manifest is None and r["full_name"].lower() not in wip:
                 continue
             m = manifest or {}
-            if "template" in str(m.get("name", "")).lower():
-                # Created from the integration template, not filled in yet: only the repository name means something.
+            # Created from the integration template and not filled in yet: only the repository name means something.
+            template = "template" in str(m.get("name", "")).lower()
+            if template:
                 m = {}
+            if status == NO_TOPIC and datetime.now(timezone.utc) - parse_date(r["pushed_at"]) > INACTIVE_AFTER:
+                status = INACTIVE
             desc = m.get("description") if isinstance(m.get("description"), dict) else {}
             fallback = r.get("description") or ""
             repos[r["full_name"].lower()] = dict(
@@ -181,9 +190,43 @@ def load_gladys():
                 desc_fr=desc.get("fr") or desc.get("en") or fallback,
                 desc_en=desc.get("en") or desc.get("fr") or fallback,
                 type=m.get("type", ""), version=m.get("version", ""), cover=cover, status=status,
-                since=r["created_at"][:10], pushed=r["pushed_at"][:10],
+                since=r["created_at"][:10], pushed=r["pushed_at"][:10], template=template,
             )
+    for key in archived_or_gone([g["repo"] for g in repos.values()]):
+        repos[key]["status"] = ARCHIVED
     return repos, index.get("generated_at", "")
+
+
+def parse_date(iso):
+    return datetime.fromisoformat(iso.replace("Z", "+00:00"))
+
+
+def covers(g):
+    """Whether an integration still covers its idea: an archived repository no longer does, and neither does an
+    untouched copy of the template once inactive, so that the idea is free again."""
+    return g["status"] != ARCHIVED and not (g["status"] == INACTIVE and g.get("template"))
+
+
+def archived_or_gone(names):
+    """Repositories archived or deleted on GitHub, as lowercase owner/name keys."""
+    found = set()
+    for start in range(0, len(names), 50):
+        chunk = names[start:start + 50]
+        fields = " ".join(
+            f'r{i}: repository(owner: {json.dumps(n.split("/")[0])}, name: {json.dumps(n.split("/")[1])}) {{ isArchived }}'
+            for i, n in enumerate(chunk))
+        # A deleted repository makes GraphQL answer with an error next to the data: read the data anyway.
+        result = subprocess.run(["gh", "api", "graphql", "-f", f"query={{ {fields} }}"],
+                                capture_output=True, text=True)
+        try:
+            data = json.loads(result.stdout).get("data") or {}
+        except json.JSONDecodeError:
+            raise RuntimeError(f"gh api graphql: {result.stderr.strip()}")
+        for i, n in enumerate(chunk):
+            repo = data.get(f"r{i}")
+            if repo is None or repo["isArchived"]:
+                found.add(n.lower())
+    return found
 
 
 def norm(s):
@@ -243,11 +286,14 @@ def build():
         if (num, g["repo"]) not in rejected and all(x is not g for x, _ in mapping.get(num, [])):
             mapping.setdefault(num, []).append((g, "A"))
     claims = {num: (who, src) for num, who, src in read_table(DATA / "claims.txt")}
+    # Repositories that no longer cover an idea keep their match for the record, but count neither as coverage
+    # nor as duplicates.
+    live = {num: [(g, q) for g, q in lst if covers(g)] for num, lst in mapping.items()}
 
     ha_rows = []
     for h in ha:
         num = h["#"]
-        matches = sorted(mapping.get(num, []), key=lambda m: (RANK.index(m[0]["status"]), "EPA".index(m[1])))
+        matches = sorted(live.get(num, []), key=lambda m: (RANK.index(m[0]["status"]), "EPA".index(m[1])))
         row = dict(
             n=int(num), prio=h["Priority"], name=h["Integration"], category=h["Category"],
             usage=h["HA usage (% of installations)"], access=h["Access"],
@@ -275,9 +321,10 @@ def build():
         g["dups"] = set()
         full_name = re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", re.sub(r"\(.*?\)", "", g["name"]))
                            .encode("ascii", "ignore").decode().lower()).strip()
-        by_name.setdefault(full_name, []).append(g)
+        if covers(g):
+            by_name.setdefault(full_name, []).append(g)
     # A partial match complements an integration rather than duplicating it.
-    groups = [[g for g, q in lst if q != "P"] for lst in mapping.values()] + list(by_name.values())
+    groups = [[g for g, q in lst if q != "P"] for lst in live.values()] + list(by_name.values())
     for group in groups:
         for g in group:
             g["dups"].update(x["repo"] for x in group if x is not g)
@@ -355,6 +402,9 @@ def write_xlsx(data, tables, path):
         [STATUS_FR[STORE], "indexée par le store Gladys"],
         [STATUS_FR[TOPIC_ONLY], f"dépôt avec le topic {TOPIC}, pas encore indexé par le store (ou refusé par l'indexeur)"],
         [STATUS_FR[NO_TOPIC], f"dépôt créé depuis le template, ou avec le topic {WIP_TOPIC} : en développement"],
+        [STATUS_FR[INACTIVE], "dépôt hors store sans commit depuis plus de 30 jours ; une copie du template jamais "
+                              "remplie ne compte plus pour l'idée"],
+        [STATUS_FR[ARCHIVED], "dépôt archivé ou supprimé : ne compte plus pour l'idée"],
         [STATUS_FR[CLAIMED], "annoncée sur le forum, aucun dépôt trouvé"],
         [STATUS_FR[FREE], "personne dessus à notre connaissance"],
         [],
@@ -377,7 +427,7 @@ def write_xlsx(data, tables, path):
     ws.column_dimensions["B"].width = 110
 
     fills = {STATUS_FR[STORE]: "C6EFCE", STATUS_FR[TOPIC_ONLY]: "FFEB9C",
-             STATUS_FR[NO_TOPIC]: "FCE4D6", STATUS_FR[CLAIMED]: "DDEBF7"}
+             STATUS_FR[NO_TOPIC]: "FCE4D6", STATUS_FR[INACTIVE]: "E7E6E6", STATUS_FR[CLAIMED]: "DDEBF7"}
     sheets = [
         ("Liste HA ↔ Gladys", head_ha, rows_ha, 9, {8: "doc", 13: None}, 14,
          [6, 5, 34, 24, 9, 12, 9, 14, 6, 26, 13, 26, 16, 38, 22, 9, 10, 34, 60]),
