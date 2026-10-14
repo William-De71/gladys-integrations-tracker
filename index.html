@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suivi des intégrations Gladys</title>
+<meta name="description" content="Qui fait quoi : la liste des intégrations Home Assistant de Pierre-Gilles face aux intégrations externes Gladys, mise à jour automatiquement.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><path d='M9 16.5l4.5 4.5L23 11' stroke='white' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --border: #d9dde3;
+  --text: #1b1f24; --muted: #5b6470; --accent: #1f6feb; --accent-soft: #e3edfd;
+  --store: #1a7f37; --store-bg: #dcf3e2; --topic: #9a6700; --topic-bg: #fff3c4;
+  --notopic: #bc4c00; --notopic-bg: #ffe6d5; --claimed: #0b5cad; --claimed-bg: #dcebfb;
+  --free: #5b6470; --free-bg: #eceef1; --dup: #cf222e; --dup-bg: #ffe1e3;
+  --radius: 10px; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --surface: #171b21; --surface-2: #1e232b; --border: #2d343e;
+    --text: #e6e9ed; --muted: #9aa3ae; --accent: #4c94ff; --accent-soft: #1a2a44;
+    --store: #4ac26b; --store-bg: #12301c; --topic: #e3b341; --topic-bg: #33290d;
+    --notopic: #f0883e; --notopic-bg: #3a2210; --claimed: #6cb6ff; --claimed-bg: #132c47;
+    --free: #9aa3ae; --free-bg: #23282f; --dup: #ff7b72; --dup-bg: #3d1517; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --surface-2: #1e232b; --border: #2d343e;
+  --text: #e6e9ed; --muted: #9aa3ae; --accent: #4c94ff; --accent-soft: #1a2a44;
+  --store: #4ac26b; --store-bg: #12301c; --topic: #e3b341; --topic-bg: #33290d;
+  --notopic: #f0883e; --notopic-bg: #3a2210; --claimed: #6cb6ff; --claimed-bg: #132c47;
+  --free: #9aa3ae; --free-bg: #23282f; --dup: #ff7b72; --dup-bg: #3d1517; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; }
+h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em; }
+.sub { margin: 0; color: var(--muted); max-width: 760px; }
+.tools { display: flex; gap: 8px; }
+.btn {
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer;
+}
+.btn:hover { background: var(--surface-2); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 24px 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.stat b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 13px; }
+.bar { height: 6px; border-radius: 3px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--store); }
+.howto {
+  background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 18px; margin-bottom: 24px;
+}
+.howto h2 { margin: 0 0 6px; font-size: 16px; }
+.howto ol { margin: 0; padding-left: 20px; }
+.howto code { background: var(--surface); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600;
+  padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.filters input[type="search"], .filters select {
+  font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 10px; min-width: 0;
+}
+.filters input[type="search"] { flex: 1 1 260px; }
+.filters label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 14px; }
+.count { color: var(--muted); font-size: 14px; margin-left: auto; }
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 9px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border); }
+th {
+  position: sticky; top: 0; background: var(--surface-2); font-size: 13px; color: var(--muted);
+  font-weight: 600; white-space: nowrap; cursor: pointer; user-select: none;
+}
+th[data-sort]::after { content: " ↕"; opacity: .4; }
+th.asc::after { content: " ↑"; opacity: 1; }
+th.desc::after { content: " ↓"; opacity: 1; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.ha-name { font-weight: 600; }
+.small { font-size: 13px; color: var(--muted); }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  white-space: nowrap;
+}
+.s-store { color: var(--store); background: var(--store-bg); }
+.s-topic { color: var(--topic); background: var(--topic-bg); }
+.s-no_topic { color: var(--notopic); background: var(--notopic-bg); }
+.s-claimed { color: var(--claimed); background: var(--claimed-bg); }
+.s-free { color: var(--free); background: var(--free-bg); }
+.dup { color: var(--dup); background: var(--dup-bg); }
+.prio { font-weight: 700; font-size: 12px; }
+.gl { display: flex; gap: 10px; align-items: center; min-width: 240px; }
+.cover {
+  width: 80px; height: 45px; object-fit: cover; border-radius: 6px; flex: none;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.cover.empty { display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+.gl-list > div + div { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.empty-row td { text-align: center; color: var(--muted); padding: 32px; }
+footer { margin-top: 24px; color: var(--muted); font-size: 13px; }
+footer a { color: var(--muted); text-decoration: underline; }
+.hidden { display: none; }
+@media (max-width: 640px) {
+  h1 { font-size: 22px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .stat { padding: 10px 12px; }
+  .stat b { font-size: 22px; }
+  .count { margin-left: 0; width: 100%; }
+  .cover { width: 64px; height: 36px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 data-i18n="title">Suivi des intégrations Gladys</h1>
+      <p class="sub" data-i18n="subtitle">La liste des intégrations Home Assistant de Pierre-Gilles, face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et la liste.</p>
+    </div>
+    <div class="tools">
+      <button class="btn" id="lang" type="button">English</button>
+      <button class="btn" id="theme" type="button" aria-label="Thème">◐</button>
+    </div>
+  </header>
+
+  <section class="stats" id="stats" aria-live="polite"></section>
+
+  <section class="howto">
+    <h2 data-i18n="howtoTitle">Tu veux prendre une intégration ?</h2>
+    <ol>
+      <li data-i18n-html="howto1">Vérifie ici qu'elle est <b>libre</b> (et qu'elle n'apparaît pas déjà dans l'onglet « Intégrations Gladys »).</li>
+      <li data-i18n-html="howto2">Crée ton dépôt GitHub <b>dès le premier jour</b>, avec le topic <code>gladys-assistant-integration</code> : elle apparaît ici comme « en cours » à la prochaine mise à jour.</li>
+      <li data-i18n-html="howto3">Annonce-la sur le <a href="https://community.gladysassistant.com/t/10385">fil du forum</a>. Une correspondance fausse ou manquante ? Une PR sur <code>data/mapping.txt</code> suffit.</li>
+    </ol>
+  </section>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-ha" aria-selected="true" data-i18n="tabHa">Liste Home Assistant</button>
+    <button class="tab" role="tab" id="tab-gl" aria-selected="false" data-i18n="tabGl">Intégrations Gladys</button>
+  </div>
+
+  <div class="filters">
+    <input type="search" id="q" data-i18n-ph="search" placeholder="Rechercher (nom, marque, auteur, dépôt…)">
+    <select id="f-status" aria-label="Statut"></select>
+    <select id="f-prio" aria-label="Priorité"></select>
+    <select id="f-cat" aria-label="Catégorie"></select>
+    <label><input type="checkbox" id="f-dup"> <span data-i18n="dupOnly">Doublons seulement</span></label>
+    <label id="nohw-wrap"><input type="checkbox" id="f-nohw"> <span data-i18n="noHw">Sans matériel</span></label>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"><tr class="empty-row"><td data-i18n="loading">Chargement…</td></tr></tbody>
+    </table>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var I18N = {
+    fr: {
+      title: "Suivi des intégrations Gladys",
+      subtitle: "La liste des intégrations Home Assistant de Pierre-Gilles, face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et la liste.",
+      howtoTitle: "Tu veux prendre une intégration ?",
+      howto1: "Vérifie ici qu'elle est <b>libre</b> (et qu'elle n'apparaît pas déjà dans l'onglet « Intégrations Gladys »).",
+      howto2: "Crée ton dépôt GitHub <b>dès le premier jour</b>, avec le topic <code>gladys-assistant-integration</code> : elle apparaît ici comme « en cours » à la prochaine mise à jour.",
+      howto3: "Annonce-la sur le <a href=\"https://community.gladysassistant.com/t/10385\">fil du forum</a>. Une correspondance fausse ou manquante ? Une PR sur <code>data/mapping.txt</code> suffit.",
+      tabHa: "Liste Home Assistant", tabGl: "Intégrations Gladys",
+      search: "Rechercher (nom, marque, auteur, dépôt…)", dupOnly: "Doublons seulement", noHw: "Sans matériel",
+      loading: "Chargement…", nothing: "Aucun résultat.", loadError: "Impossible de charger data.json.",
+      allStatus: "Tous les statuts", allPrio: "Toutes priorités", allCat: "Toutes catégories",
+      statIdeas: "idées dans la liste", statTaken: "déjà prises ou faites",
+      statP1: "P1 couvertes", statStore: "intégrations au store", statWip: "dépôts en cours (hors store)",
+      statDup: "idées avec plusieurs dépôts",
+      shown: function (n, t) { return n + " sur " + t; },
+      cNum: "N°", cPrio: "Prio", cHa: "Intégration Home Assistant", cCat: "Catégorie", cUsage: "Usage HA",
+      cStatus: "Statut", cGladys: "Intégration Gladys", cCover: "Cover", cName: "Intégration", cAuthor: "Auteur",
+      cVersion: "Version", cHaEq: "Équivalent dans la liste", cSince: "Vue depuis",
+      st: { store: "Publiée", topic: "Dépôt, pas au store", no_topic: "Dépôt sans topic", claimed: "Revendiquée", free: "Libre" },
+      partial: "partielle", dup: "doublon", outside: "hors liste", noCover: "pas de cover",
+      footer: function (d) {
+        return "Généré le " + d + ". Sources : ";
+      },
+      srcList: "liste de Pierre-Gilles", srcStore: "store Gladys", srcForum: "fil forum", srcTopic: "topic GitHub",
+      downloads: "Télécharger : ", xlsx: "classeur .xlsx", csvHa: "CSV liste HA", csvGl: "CSV intégrations Gladys",
+      other: "Langue", themeLabel: "Thème"
+    },
+    en: {
+      title: "Gladys integrations tracker",
+      subtitle: "Pierre-Gilles' list of Home Assistant integrations, next to what already exists for Gladys. Updated automatically from the store, GitHub and the list.",
+      howtoTitle: "Want to take an integration?",
+      howto1: "Check here that it is <b>free</b> (and not already in the “Gladys integrations” tab).",
+      howto2: "Create your GitHub repository <b>on day one</b>, with the <code>gladys-assistant-integration</code> topic: it shows up here as “in progress” on the next update.",
+      howto3: "Announce it in the <a href=\"https://community.gladysassistant.com/t/10385\">forum topic</a>. A wrong or missing match? A pull request on <code>data/mapping.txt</code> is enough.",
+      tabHa: "Home Assistant list", tabGl: "Gladys integrations",
+      search: "Search (name, brand, author, repository…)", dupOnly: "Duplicates only", noHw: "No hardware",
+      loading: "Loading…", nothing: "No results.", loadError: "Could not load data.json.",
+      allStatus: "All statuses", allPrio: "All priorities", allCat: "All categories",
+      statIdeas: "ideas in the list", statTaken: "already taken or done",
+      statP1: "P1 covered", statStore: "integrations in the store", statWip: "repositories in progress (not in the store)",
+      statDup: "ideas with several repositories",
+      shown: function (n, t) { return n + " of " + t; },
+      cNum: "#", cPrio: "Prio", cHa: "Home Assistant integration", cCat: "Category", cUsage: "HA usage",
+      cStatus: "Status", cGladys: "Gladys integration", cCover: "Cover", cName: "Integration", cAuthor: "Author",
+      cVersion: "Version", cHaEq: "Match in the list", cSince: "Seen since",
+      st: { store: "Published", topic: "Repo, not in store", no_topic: "Repo without topic", claimed: "Claimed", free: "Free" },
+      partial: "partial", dup: "duplicate", outside: "not in the list", noCover: "no cover",
+      footer: function (d) {
+        return "Generated on " + d + ". Sources: ";
+      },
+      srcList: "Pierre-Gilles' list", srcStore: "Gladys store", srcForum: "forum topic", srcTopic: "GitHub topic",
+      downloads: "Download: ", xlsx: ".xlsx workbook", csvHa: "HA list CSV", csvGl: "Gladys integrations CSV",
+      other: "Language", themeLabel: "Theme"
+    }
+  };
+
+  var STATUS_ORDER = ["store", "topic", "no_topic", "claimed", "free"];
+  var state = { lang: "fr", tab: "ha", sort: { ha: ["n", 1], gl: ["status", 1] } };
+  var data = null, byRepo = {}, haByNum = {};
+
+  function store(key, value) {
+    try {
+      if (value === undefined) return localStorage.getItem(key);
+      localStorage.setItem(key, value);
+    } catch (e) { return null; }
+  }
+
+  var savedLang = store("tracker-lang");
+  state.lang = savedLang || ((navigator.language || "fr").slice(0, 2) === "fr" ? "fr" : "en");
+  var savedTheme = store("tracker-theme");
+  if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+
+  function t(key) { return I18N[state.lang][key]; }
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function norm(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+  function badge(status) {
+    return '<span class="badge s-' + status + '">' + esc(t("st")[status]) + "</span>";
+  }
+  function cover(g) {
+    if (g && g.cover) return '<img class="cover" loading="lazy" alt="" src="' + esc(g.cover) + '">';
+    return '<span class="cover empty">' + esc(t("noCover")) + "</span>";
+  }
+  function repoLink(repo) {
+    return '<a href="https://github.com/' + esc(repo) + '" target="_blank" rel="noopener">' + esc(repo) + "</a>";
+  }
+  function fmtDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    return d.toLocaleString(state.lang === "fr" ? "fr-FR" : "en-GB", { dateStyle: "long", timeStyle: "short" });
+  }
+
+  function applyStatic() {
+    document.documentElement.lang = state.lang;
+    document.title = t("title");
+    document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-html]").forEach(function (el) { el.innerHTML = t(el.dataset.i18nHtml); });
+    document.querySelectorAll("[data-i18n-ph]").forEach(function (el) { el.placeholder = t(el.dataset.i18nPh); });
+    $("lang").textContent = state.lang === "fr" ? "English" : "Français";
+    $("theme").setAttribute("aria-label", t("themeLabel"));
+  }
+
+  function fillSelect(el, allLabel, values, labels) {
+    var current = el.value;
+    el.innerHTML = '<option value="">' + esc(allLabel) + "</option>" + values.map(function (v, i) {
+      return '<option value="' + esc(v) + '">' + esc(labels ? labels[i] : v) + "</option>";
+    }).join("");
+    el.value = values.indexOf(current) >= 0 ? current : "";
+  }
+
+  function setupFilters() {
+    fillSelect($("f-status"), t("allStatus"), STATUS_ORDER, STATUS_ORDER.map(function (s) { return t("st")[s]; }));
+    var isHa = state.tab === "ha";
+    $("f-prio").classList.toggle("hidden", !isHa);
+    $("f-cat").classList.toggle("hidden", !isHa);
+    $("nohw-wrap").classList.toggle("hidden", !isHa);
+    if (!data) return;
+    fillSelect($("f-prio"), t("allPrio"), ["P1", "P2", "P3", "P4"]);
+    var cats = {};
+    data.ha.forEach(function (h) { h.category.split(" / ").forEach(function (c) { cats[c] = 1; }); });
+    fillSelect($("f-cat"), t("allCat"), Object.keys(cats).sort());
+  }
+
+  function renderStats() {
+    var ha = data.ha;
+    var taken = ha.filter(function (h) { return h.status !== "free"; }).length;
+    var p1 = ha.filter(function (h) { return h.prio === "P1"; });
+    var p1Taken = p1.filter(function (h) { return h.status !== "free"; }).length;
+    var inStore = data.gladys.filter(function (g) { return g.status === "store"; }).length;
+    var wip = data.gladys.length - inStore;
+    var dup = ha.filter(function (h) { return h.matches.length > 1; }).length;
+    function tile(value, label, ratio) {
+      return '<div class="stat"><b>' + value + "</b><span>" + esc(label) + "</span>" +
+        (ratio != null ? '<div class="bar"><i style="width:' + (ratio * 100).toFixed(1) + '%"></i></div>' : "") + "</div>";
+    }
+    $("stats").innerHTML =
+      tile(ha.length, t("statIdeas")) +
+      tile(taken, t("statTaken"), taken / ha.length) +
+      tile(p1Taken + " / " + p1.length, t("statP1"), p1Taken / p1.length) +
+      tile(inStore, t("statStore")) +
+      tile(wip, t("statWip")) +
+      tile(dup, t("statDup"));
+  }
+
+  function haColumns() {
+    return [["n", t("cNum")], ["prio", t("cPrio")], ["name", t("cHa")], ["category", t("cCat")],
+      ["usage", t("cUsage")], ["status", t("cStatus")], [null, t("cGladys")]];
+  }
+  function glColumns() {
+    return [[null, t("cCover")], ["name", t("cName")], ["author", t("cAuthor")], ["status", t("cStatus")],
+      ["version", t("cVersion")], ["ha", t("cHaEq")], ["since", t("cSince")]];
+  }
+
+  function renderHead(cols) {
+    var s = state.sort[state.tab];
+    $("thead").innerHTML = "<tr>" + cols.map(function (c) {
+      if (!c[0]) return "<th>" + esc(c[1]) + "</th>";
+      var cls = s[0] === c[0] ? (s[1] > 0 ? "asc" : "desc") : "";
+      return '<th data-sort="' + c[0] + '" class="' + cls + '">' + esc(c[1]) + "</th>";
+    }).join("") + "</tr>";
+  }
+
+  function sortValue(row, key) {
+    if (key === "status") return STATUS_ORDER.indexOf(row.status);
+    if (key === "usage") return parseFloat(row.usage) || 0;
+    if (key === "ha") return row.ha.length ? row.ha[0] : 1e9;
+    if (key === "n") return row.n;
+    return norm(row[key]);
+  }
+
+  function haText(h) {
+    var parts = [h.n, h.name, h.category, h.desc, h.area, h.claim];
+    h.matches.forEach(function (m) {
+      var g = byRepo[m.repo];
+      parts.push(m.repo, g.name, g.author);
+    });
+    return norm(parts.join(" "));
+  }
+  function glText(g) {
+    return norm([g.name, g.repo, g.author, g.desc_fr, g.desc_en, g.ha.map(function (n) { return haByNum[n].name; }).join(" ")].join(" "));
+  }
+
+  function renderHaRow(h) {
+    var gl = h.matches.map(function (m) {
+      var g = byRepo[m.repo];
+      return '<div class="gl">' + cover(g) + "<div><div>" + esc(g.name) +
+        (m.quality === "P" ? ' <span class="small">(' + esc(t("partial")) + ")</span>" : "") +
+        (g.status !== "store" ? " " + badge(g.status) : "") + "</div>" +
+        '<div class="small">' + repoLink(g.repo) + (g.version ? " · v" + esc(g.version) : "") + "</div></div></div>";
+    }).join("");
+    if (!gl && h.claim) gl = '<span class="small">' + esc(h.claim) + "</span>";
+    var dup = h.matches.length > 1 ? ' <span class="badge dup">' + esc(t("dup")) + " ×" + h.matches.length + "</span>" : "";
+    return "<tr>" +
+      '<td class="num">' + h.n + "</td>" +
+      '<td><span class="prio">' + esc(h.prio) + "</span></td>" +
+      '<td><a class="ha-name" href="' + esc(h.link) + '" target="_blank" rel="noopener">' + esc(h.name) + "</a>" +
+      '<div class="small">' + esc(h.desc) + "</div></td>" +
+      '<td class="small">' + esc(h.category) + "</td>" +
+      '<td class="num">' + esc(h.usage) + "</td>" +
+      "<td>" + badge(h.status) + dup + "</td>" +
+      '<td class="gl-list">' + gl + "</td></tr>";
+  }
+
+  function renderGlRow(g) {
+    var ha = g.ha.map(function (n) {
+      var h = haByNum[n];
+      return '<a href="' + esc(h.link) + '" target="_blank" rel="noopener">' + n + " · " + esc(h.name) + "</a>" +
+        (h.matches.length > 1 ? ' <span class="badge dup">' + esc(t("dup")) + "</span>" : "");
+    }).join("<br>") || '<span class="small">' + esc(t("outside")) + "</span>";
+    return "<tr>" +
+      "<td>" + cover(g) + "</td>" +
+      '<td><span class="ha-name">' + esc(g.name) + '</span><div class="small">' + repoLink(g.repo) + "</div>" +
+      '<div class="small">' + esc(state.lang === "fr" ? g.desc_fr : g.desc_en) + "</div></td>" +
+      '<td><a href="https://github.com/' + esc(g.author) + '" target="_blank" rel="noopener">' + esc(g.author) + "</a></td>" +
+      "<td>" + badge(g.status) + "</td>" +
+      '<td class="num">' + esc(g.version) + "</td>" +
+      "<td>" + ha + "</td>" +
+      '<td class="num">' + esc(g.since) + "</td></tr>";
+  }
+
+  function render() {
+    if (!data) return;
+    var isHa = state.tab === "ha";
+    var rows = isHa ? data.ha : data.gladys;
+    var q = norm($("q").value.trim());
+    var fs = $("f-status").value, fp = $("f-prio").value, fc = $("f-cat").value;
+    var fd = $("f-dup").checked, fh = $("f-nohw").checked;
+    var out = rows.filter(function (r) {
+      if (fs && r.status !== fs) return false;
+      if (isHa) {
+        if (fp && r.prio !== fp) return false;
+        if (fc && r.category.split(" / ").indexOf(fc) < 0) return false;
+        if (fd && r.matches.length < 2) return false;
+        if (fh && !r.no_hardware) return false;
+        if (q && haText(r).indexOf(q) < 0) return false;
+      } else {
+        if (fd && !r.ha.some(function (n) { return haByNum[n].matches.length > 1; })) return false;
+        if (q && glText(r).indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    var s = state.sort[state.tab];
+    out.sort(function (a, b) {
+      var x = sortValue(a, s[0]), y = sortValue(b, s[0]);
+      if (x < y) return -s[1];
+      if (x > y) return s[1];
+      return isHa ? a.n - b.n : norm(a.name) < norm(b.name) ? -1 : 1;
+    });
+    if (s[0] === "usage") out.reverse();
+    renderHead(isHa ? haColumns() : glColumns());
+    $("tbody").innerHTML = out.length
+      ? out.map(isHa ? renderHaRow : renderGlRow).join("")
+      : '<tr class="empty-row"><td colspan="7">' + esc(t("nothing")) + "</td></tr>";
+    $("count").textContent = t("shown")(out.length, rows.length);
+  }
+
+  function renderFooter() {
+    var s = data.sources;
+    function a(href, label) { return '<a href="' + esc(href) + '">' + esc(label) + "</a>"; }
+    $("footer").innerHTML = esc(t("footer")(fmtDate(data.generated_at))) +
+      [a(s.ha_list, t("srcList")), a(s.store, t("srcStore")), a(s.topic, t("srcTopic")), a(s.forum, t("srcForum"))].join(" · ") +
+      "<br>" + esc(t("downloads")) +
+      [a("suivi-integrations-gladys.xlsx", t("xlsx")), a("liste-ha-gladys.csv", t("csvHa")),
+        a("integrations-gladys.csv", t("csvGl"))].join(" · ");
+  }
+
+  function renderAll() {
+    applyStatic();
+    setupFilters();
+    if (!data) return;
+    renderStats();
+    renderFooter();
+    render();
+  }
+
+  $("tab-ha").addEventListener("click", function () { switchTab("ha"); });
+  $("tab-gl").addEventListener("click", function () { switchTab("gl"); });
+  function switchTab(tab) {
+    state.tab = tab;
+    $("tab-ha").setAttribute("aria-selected", tab === "ha");
+    $("tab-gl").setAttribute("aria-selected", tab === "gl");
+    setupFilters();
+    render();
+  }
+  $("thead").addEventListener("click", function (e) {
+    var th = e.target.closest("th[data-sort]");
+    if (!th) return;
+    var s = state.sort[state.tab];
+    state.sort[state.tab] = [th.dataset.sort, s[0] === th.dataset.sort ? -s[1] : 1];
+    render();
+  });
+  ["q", "f-status", "f-prio", "f-cat", "f-dup", "f-nohw"].forEach(function (id) {
+    $(id).addEventListener("input", render);
+  });
+  $("lang").addEventListener("click", function () {
+    state.lang = state.lang === "fr" ? "en" : "fr";
+    store("tracker-lang", state.lang);
+    renderAll();
+  });
+  $("theme").addEventListener("click", function () {
+    var root = document.documentElement;
+    var dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    store("tracker-theme", root.dataset.theme);
+  });
+
+  renderAll();
+  fetch("data.json", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) {
+      data = d;
+      d.gladys.forEach(function (g) { byRepo[g.repo] = g; });
+      d.ha.forEach(function (h) { haByNum[h.n] = h; });
+      renderAll();
+    })
+    .catch(function () {
+      $("tbody").innerHTML = '<tr class="empty-row"><td colspan="7">' + esc(t("loadError")) + "</td></tr>";
+    });
+})();
+</script>
+</body>
+</html>
