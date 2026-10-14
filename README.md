@@ -78,7 +78,7 @@ Un push sur ces fichiers relance la page tout de suite, sans attendre la mise à
 Sans attendre les 6 heures, deux façons :
 
 - sur GitHub : onglet [Actions → Build and publish](https://github.com/William-De71/gladys-integrations-tracker/actions/workflows/build.yml)
-  → bouton **Run workflow** (lien « Mettre à jour maintenant » en bas de la page) ;
+  → bouton **Run workflow** (le bouton « Mettre à jour » en haut de la page y mène) ;
 - en ligne de commande : `gh workflow run build.yml -R William-De71/gladys-integrations-tracker`.
 
 La page est à jour environ une minute plus tard. Il faut les droits d'écriture sur le dépôt : un contributeur qui

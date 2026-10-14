@@ -48,6 +48,18 @@ h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em; }
   border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer;
 }
 .btn:hover { background: var(--surface-2); }
+a.btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: var(--accent); filter: brightness(1.1); }
+.to-top {
+  position: fixed; right: 16px; bottom: 16px; width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 20px;
+  cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); opacity: 0; pointer-events: none;
+  transform: translateY(8px); transition: opacity .2s, transform .2s;
+}
+.to-top.visible { opacity: 1; pointer-events: auto; transform: none; }
+.to-top:hover { background: var(--surface-2); }
+@media (prefers-reduced-motion: reduce) { .to-top { transition: none; } }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 24px 0; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
 .stat b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
@@ -129,6 +141,8 @@ footer a { color: var(--muted); text-decoration: underline; }
       <p class="sub" data-i18n="subtitle">La liste des intégrations Home Assistant de Pierre-Gilles, face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et la liste.</p>
     </div>
     <div class="tools">
+      <a class="btn btn-primary" id="refresh" target="_blank" rel="noopener"
+         href="https://github.com/William-De71/gladys-integrations-tracker/actions/workflows/build.yml">↻ <span data-i18n="refresh">Mettre à jour</span></a>
       <button class="btn" id="lang" type="button">English</button>
       <button class="btn" id="theme" type="button" aria-label="Thème">◐</button>
     </div>
@@ -168,6 +182,7 @@ footer a { color: var(--muted); text-decoration: underline; }
   </div>
 
   <footer id="footer"></footer>
+  <button class="to-top" id="to-top" type="button" aria-label="Haut de page">↑</button>
 </div>
 
 <script>
@@ -199,7 +214,9 @@ footer a { color: var(--muted); text-decoration: underline; }
         return "Généré le " + d + ". Sources : ";
       },
       srcList: "liste de Pierre-Gilles", srcStore: "store Gladys", srcForum: "fil forum", srcTopic: "topic GitHub",
-      refresh: "Mettre à jour maintenant", downloads: "Télécharger : ", xlsx: "classeur .xlsx", csvHa: "CSV liste HA", csvGl: "CSV intégrations Gladys",
+      refresh: "Mettre à jour",
+      refreshHint: "Relance la mise à jour sur GitHub : bouton « Run workflow » (droits d'écriture sur le dépôt nécessaires). La page est à jour environ une minute après.",
+      toTop: "Haut de page", downloads: "Télécharger : ", xlsx: "classeur .xlsx", csvHa: "CSV liste HA", csvGl: "CSV intégrations Gladys",
       other: "Langue", themeLabel: "Thème"
     },
     en: {
@@ -226,7 +243,9 @@ footer a { color: var(--muted); text-decoration: underline; }
         return "Generated on " + d + ". Sources: ";
       },
       srcList: "Pierre-Gilles' list", srcStore: "Gladys store", srcForum: "forum topic", srcTopic: "GitHub topic",
-      refresh: "Update now", downloads: "Download: ", xlsx: ".xlsx workbook", csvHa: "HA list CSV", csvGl: "Gladys integrations CSV",
+      refresh: "Update",
+      refreshHint: "Starts an update on GitHub: “Run workflow” button (needs write access to the repository). The page is up to date about a minute later.",
+      toTop: "Back to top", downloads: "Download: ", xlsx: ".xlsx workbook", csvHa: "HA list CSV", csvGl: "Gladys integrations CSV",
       other: "Language", themeLabel: "Theme"
     }
   };
@@ -281,6 +300,9 @@ footer a { color: var(--muted); text-decoration: underline; }
     document.querySelectorAll("[data-i18n-ph]").forEach(function (el) { el.placeholder = t(el.dataset.i18nPh); });
     $("lang").textContent = state.lang === "fr" ? "English" : "Français";
     $("theme").setAttribute("aria-label", t("themeLabel"));
+    $("refresh").title = t("refreshHint");
+    $("to-top").setAttribute("aria-label", t("toTop"));
+    $("to-top").title = t("toTop");
   }
 
   function fillSelect(el, allLabel, values, labels) {
@@ -445,7 +467,6 @@ footer a { color: var(--muted); text-decoration: underline; }
     function a(href, label) { return '<a href="' + esc(href) + '">' + esc(label) + "</a>"; }
     $("footer").innerHTML = esc(t("footer")(fmtDate(data.generated_at))) +
       [a(s.ha_list, t("srcList")), a(s.store, t("srcStore")), a(s.topic, t("srcTopic")), a(s.forum, t("srcForum"))].join(" · ") +
-      (s.workflow ? " · " + a(s.workflow, t("refresh")) : "") +
       "<br>" + esc(t("downloads")) +
       [a("suivi-integrations-gladys.xlsx", t("xlsx")), a("liste-ha-gladys.csv", t("csvHa")),
         a("integrations-gladys.csv", t("csvGl"))].join(" · ");
@@ -491,11 +512,20 @@ footer a { color: var(--muted); text-decoration: underline; }
     store("tracker-theme", root.dataset.theme);
   });
 
+  window.addEventListener("scroll", function () {
+    $("to-top").classList.toggle("visible", window.scrollY > 600);
+  }, { passive: true });
+  $("to-top").addEventListener("click", function () {
+    var smooth = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
+  });
+
   renderAll();
   fetch("data.json", { cache: "no-cache" })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function (d) {
       data = d;
+      if (d.sources.workflow) $("refresh").href = d.sources.workflow;
       d.gladys.forEach(function (g) { byRepo[g.repo] = g; });
       d.ha.forEach(function (h) { haByNum[h.n] = h; });
       renderAll();
