@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Build the tracker: Pierre-Gilles' Home Assistant list ↔ Gladys external integrations.
 
-Sources, read again on every run:
+Everything is found again on every run, with nothing to maintain by hand:
   - Pierre-Gilles' gist (3_full-list.csv);
   - the live Gladys store index (index.json);
-  - GitHub repositories with the gladys-assistant-integration topic (via `gh`);
-  - data/extra-repos.txt: Gladys repositories spotted by hand, without the topic;
-  - data/mapping.txt: HA list number → Gladys repository (E = equivalent, P = partial);
-  - data/claims.txt: forum claims that have no repository yet.
+  - GitHub repositories with the gladys-assistant-integration topic (published, or about to be);
+  - GitHub repositories named "gladys…" that contain a gladys-assistant-integration.json manifest
+    (every repository created from the integration template has one), or that have the
+    gladys-integration-wip topic: integrations in progress, which the store ignores;
+  - HA list ↔ Gladys matches: integrations whose names are the same are matched automatically.
+
+Optional corrections, never required:
+  - data/mapping.txt: HA list number | repository | E (equivalent), P (partial) or - (wrong automatic match);
+  - data/claims.txt: forum claims that have no repository yet;
+  - data/extra-repos.txt: Gladys repositories the searches cannot find.
 
 Output, in site/: data.json (read by index.html), one CSV per table, and an .xlsx workbook.
 """
@@ -16,7 +22,9 @@ import io
 import json
 import shutil
 import subprocess
+import re
 import sys
+import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -38,18 +46,26 @@ STORE_INDEX = "https://integration-store-storage.gladysassistant.com/index.json"
 STORE_PAGE = "https://gladysassistant.com/fr/docs/integrations/external/"
 FORUM_TOPIC = "https://community.gladysassistant.com/t/10385"
 TOPIC = "gladys-assistant-integration"
+# Claims an integration without the store topic: the store would list an empty repository with it.
+WIP_TOPIC = "gladys-integration-wip"
+MANIFEST = "gladys-assistant-integration.json"
+# External integrations started in summer 2026: older "gladys" repositories are Gladys 4 modules.
+NAME_SEARCH = "gladys in:name fork:false created:>2026-06-01"
 USER_AGENT = "gladys-integrations-tracker"
+# Where to start an update by hand: Actions tab → "Run workflow" (needs write access to the repository).
+WORKFLOW_PAGE = "https://github.com/William-De71/gladys-integrations-tracker/actions/workflows/build.yml"
 
 # Status keys, from the most to the least advanced. The page and the workbook translate them.
 STORE, TOPIC_ONLY, NO_TOPIC, CLAIMED, FREE = "store", "topic", "no_topic", "claimed", "free"
 STATUS_FR = {
     STORE: "Publiée (store)",
-    TOPIC_ONLY: "Dépôt GitHub, pas encore au store",
-    NO_TOPIC: "Dépôt GitHub sans topic store",
+    TOPIC_ONLY: "Topic store posé, pas encore indexée",
+    NO_TOPIC: "En cours (dépôt GitHub)",
     CLAIMED: "Revendiquée (forum)",
     FREE: "Libre",
 }
 RANK = [STORE, TOPIC_ONLY, NO_TOPIC]
+QUALITY_FR = {"E": "Équivalente", "P": "Partielle", "A": "Automatique (même nom)"}
 
 
 def fetch(url):
@@ -78,17 +94,38 @@ def load_ha_list():
     return list(csv.DictReader(io.StringIO(fetch(GIST_CSV))))
 
 
-def find_cover(repo, branch):
-    for name in ("cover.png", "cover.jpg"):
-        url = f"https://raw.githubusercontent.com/{repo}/{branch}/{name}"
-        try:
-            req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=10) as r:
-                if r.status == 200:
-                    return url
-        except Exception:
-            pass
-    return ""
+def exists(url):
+    try:
+        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
+def read_repo(repo, branch):
+    """Manifest and cover of a repository that is not in the store index yet."""
+    raw = f"https://raw.githubusercontent.com/{repo}/{branch}/"
+    try:
+        manifest = json.loads(fetch(raw + MANIFEST))
+    except Exception:
+        manifest = None
+    cover = next((raw + n for n in ("cover.png", "cover.jpg") if exists(raw + n)), "")
+    if manifest and not cover and str(manifest.get("cover_image", "")).startswith("https://"):
+        cover = manifest["cover_image"]
+    return manifest, cover
+
+
+def readable(repo_name):
+    """gladys-truenas → TrueNAS is out of reach, but at least Truenas."""
+    stem = re.sub(r"(?i)^gladys[-_]?|[-_]?gladys$|[-_]integration$|^integration[-_]", "", repo_name) or repo_name
+    return " ".join(w[:1].upper() + w[1:] for w in re.split(r"[-_]+", stem))
+
+
+def search_repos(query):
+    out = gh_api("-X", "GET", "search/repositories", "-f", f"q={query}", "-f", "per_page=100",
+                 "--paginate", "--jq", ".items[]")
+    return [json.loads(line) for line in out.splitlines() if line.strip()]
 
 
 def load_gladys():
@@ -106,54 +143,111 @@ def load_gladys():
             pushed=(item.get("github") or {}).get("pushed_at", "")[:10],
         )
 
-    pages = gh_api("-X", "GET", "search/repositories", "-f", f"q=topic:{TOPIC}", "-f", "per_page=100",
-                   "--paginate", "--jq", ".items[]")
-    candidates = [(json.loads(line), TOPIC_ONLY) for line in pages.splitlines() if line.strip()]
+    # Listed whatever their content: repositories with the store topic or the work-in-progress topic.
+    # Found by name: listed only when they hold a Gladys manifest, to leave out unrelated "gladys" repositories.
+    candidates, wip = {}, set()
+    for r in search_repos(f"topic:{TOPIC}"):
+        candidates.setdefault(r["full_name"].lower(), (r, TOPIC_ONLY))
+    for r in search_repos(f"topic:{WIP_TOPIC}"):
+        candidates.setdefault(r["full_name"].lower(), (r, NO_TOPIC))
+        wip.add(r["full_name"].lower())
+    for r in search_repos(NAME_SEARCH):
+        candidates.setdefault(r["full_name"].lower(), (r, NO_TOPIC))
     for line in (DATA / "extra-repos.txt").read_text(encoding="utf-8").splitlines():
         line = line.strip()
-        if line and not line.startswith("#") and line.lower() not in repos:
+        if line and not line.startswith("#") and line.lower() not in candidates:
             try:
-                candidates.append((json.loads(gh_api(f"repos/{line}")), NO_TOPIC))
+                candidates[line.lower()] = (json.loads(gh_api(f"repos/{line}")), NO_TOPIC)
             except RuntimeError:
                 print(f"repository not found: {line}", file=sys.stderr)
+    todo = [(r, status) for key, (r, status) in candidates.items() if key not in repos]
 
-    new = []
-    for r, status in candidates:
-        key = r["full_name"].lower()
-        if key in repos:
-            continue
-        desc = r.get("description") or ""
-        repos[key] = dict(
-            repo=r["full_name"], name=r["name"], author=r["owner"]["login"], desc_fr=desc, desc_en=desc,
-            type="", version="", cover="", status=status,
-            since=r["created_at"][:10], pushed=r["pushed_at"][:10],
-            _branch=r.get("default_branch", "main"),
-        )
-        new.append(repos[key])
+    def inspect(item):
+        r, status = item
+        return r, status, read_repo(r["full_name"], r.get("default_branch", "main"))
+
     with ThreadPoolExecutor(16) as ex:
-        for g, cover in zip(new, ex.map(lambda g: find_cover(g["repo"], g["_branch"]), new)):
-            g["cover"] = cover
-            del g["_branch"]
+        for r, status, (manifest, cover) in ex.map(inspect, todo):
+            if status == NO_TOPIC and manifest is None and r["full_name"].lower() not in wip:
+                continue
+            m = manifest or {}
+            if "template" in str(m.get("name", "")).lower():
+                # Created from the integration template, not filled in yet: only the repository name means something.
+                m = {}
+            desc = m.get("description") if isinstance(m.get("description"), dict) else {}
+            fallback = r.get("description") or ""
+            repos[r["full_name"].lower()] = dict(
+                repo=r["full_name"], name=m.get("name") or readable(r["name"]), author=r["owner"]["login"],
+                desc_fr=desc.get("fr") or desc.get("en") or fallback,
+                desc_en=desc.get("en") or desc.get("fr") or fallback,
+                type=m.get("type", ""), version=m.get("version", ""), cover=cover, status=status,
+                since=r["created_at"][:10], pushed=r["pushed_at"][:10],
+            )
     return repos, index.get("generated_at", "")
+
+
+def norm(s):
+    s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower()
+    return " ".join(t for t in re.sub(r"[^a-z0-9]+", " ", s).split() if t not in NAME_STOPWORDS)
+
+
+NAME_STOPWORDS = {"gladys", "integration", "integrations", "assistant", "external", "the", "and", "for",
+                  "de", "la", "le", "les", "et", "du", "des", "home", "ha"}
+
+
+def ha_names(h):
+    """Names an HA list entry goes by: as written, and without its parentheses."""
+    name = h["Integration"]
+    return {n for n in (norm(name), norm(re.sub(r"\(.*?\)", "", name))) if len(n) >= 3}
+
+
+def gladys_names(g):
+    """Names a Gladys integration goes by: its name, each part of a "A / B" name, and its repository name."""
+    name = re.sub(r"\(.*?\)", "", g["name"])
+    names = {norm(g["name"]), norm(name)}
+    names.update(norm(p) for p in re.split(r" / |, | & ", name))
+    stem = re.sub(r"(?i)^gladys[-_]?|[-_]?gladys$|[-_]integration$|^integration[-_]", "", g["repo"].split("/")[1])
+    names.add(norm(stem.replace("-", " ").replace("_", " ")))
+    return {n for n in names if len(n) >= 3}
+
+
+def auto_matches(ha, gladys):
+    """Same name on both sides. Strict on purpose: a wrong match is worse than a missing one."""
+    by_name = {}
+    for h in ha:
+        for n in ha_names(h):
+            by_name.setdefault(n, set()).add(h["#"])
+    found = []
+    for g in gladys.values():
+        nums = set()
+        for n in gladys_names(g):
+            nums |= by_name.get(n, set())
+        found.extend((num, g) for num in nums)
+    return found
 
 
 def build():
     ha = load_ha_list()
     gladys, index_date = load_gladys()
 
-    mapping = {}
+    mapping, rejected = {}, set()
     for num, repo, quality in read_table(DATA / "mapping.txt"):
         g = gladys.get(repo.lower())
         if g is None:
             print(f"mapping skipped, unknown repository: {repo}", file=sys.stderr)
-            continue
-        mapping.setdefault(num, []).append((g, quality))
+        elif quality == "-":
+            rejected.add((num, g["repo"]))
+        else:
+            mapping.setdefault(num, []).append((g, quality))
+    for num, g in auto_matches(ha, gladys):
+        if (num, g["repo"]) not in rejected and all(x is not g for x, _ in mapping.get(num, [])):
+            mapping.setdefault(num, []).append((g, "A"))
     claims = {num: (who, src) for num, who, src in read_table(DATA / "claims.txt")}
 
     ha_rows = []
     for h in ha:
         num = h["#"]
-        matches = sorted(mapping.get(num, []), key=lambda m: (RANK.index(m[0]["status"]), m[1]))
+        matches = sorted(mapping.get(num, []), key=lambda m: (RANK.index(m[0]["status"]), "EPA".index(m[1])))
         row = dict(
             n=int(num), prio=h["Priority"], name=h["Integration"], category=h["Category"],
             usage=h["HA usage (% of installations)"], access=h["Access"],
@@ -172,15 +266,27 @@ def build():
             row["claim"] = f"gist: {h['Status']}"
         ha_rows.append(row)
 
+    # Two Gladys integrations are duplicates when they match the same HA idea, or share a name.
+    by_name = {}
     for g in gladys.values():
         g["ha"] = sorted((int(n) for n, lst in mapping.items() if any(x is g for x, _ in lst)))
+        g["dups"] = set()
+        full_name = re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", re.sub(r"\(.*?\)", "", g["name"]))
+                           .encode("ascii", "ignore").decode().lower()).strip()
+        by_name.setdefault(full_name, []).append(g)
+    groups = [[g for g, _ in lst] for lst in mapping.values()] + list(by_name.values())
+    for group in groups:
+        for g in group:
+            g["dups"].update(x["repo"] for x in group if x is not g)
+    for g in gladys.values():
+        g["dups"] = sorted(g["dups"])
     gladys_rows = sorted(gladys.values(), key=lambda g: (RANK.index(g["status"]), g["name"].lower()))
 
     return dict(
         generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         store_index_at=index_date,
         sources=dict(ha_list=GIST_URL, store=STORE_PAGE, store_index=STORE_INDEX, forum=FORUM_TOPIC,
-                     topic=f"https://github.com/topics/{TOPIC}"),
+                     topic=f"https://github.com/topics/{TOPIC}", workflow=WORKFLOW_PAGE),
         ha=ha_rows,
         gladys=gladys_rows,
     )
@@ -200,7 +306,7 @@ def flat_tables(data):
         rows_ha.append([
             h["n"], h["prio"], h["name"], h["category"], h["usage"], h["access"],
             "oui" if h["no_hardware"] else "", h["area"], h["link"], STATUS_FR[h["status"]],
-            {"E": "Équivalente", "P": "Partielle"}.get(h["quality"], ""),
+            QUALITY_FR.get(h["quality"], ""),
             first["name"] if first else "", first["author"] if first else "",
             f"https://github.com/{first['repo']}" if first else "",
             first["cover"] if first else "", first["version"] if first else "",
@@ -208,11 +314,12 @@ def flat_tables(data):
             ", ".join(others) or h["claim"], h["desc"],
         ])
     head_g = ["Intégration Gladys", "Auteur", "Dépôt GitHub", "Cover", "Statut", "Type", "Version",
-              "Vue depuis", "Dernier push", "Équivalent HA (liste)", "Description"]
+              "Vue depuis", "Dernier push", "Équivalent HA (liste)", "Doublon avec", "Description"]
     names = {h["n"]: h["name"] for h in data["ha"]}
     rows_g = [[g["name"], g["author"], f"https://github.com/{g['repo']}", g["cover"], STATUS_FR[g["status"]],
                g["type"], g["version"], g["since"], g["pushed"],
-               ", ".join(f"{n} {names[n]}" for n in g["ha"]) or "hors liste", g["desc_fr"]]
+               ", ".join(f"{n} {names[n]}" for n in g["ha"]) or "hors liste", ", ".join(g["dups"]),
+               g["desc_fr"]]
               for g in data["gladys"]]
     return (head_ha, rows_ha), (head_g, rows_g)
 
@@ -221,7 +328,7 @@ def write_xlsx(data, tables, path):
     (head_ha, rows_ha), (head_g, rows_g) = tables
     n_taken = sum(1 for h in data["ha"] if h["status"] != FREE)
     p1 = [h for h in data["ha"] if h["prio"] == "P1"]
-    n_dup = sum(1 for h in data["ha"] if len(h["matches"]) > 1)
+    n_dup = sum(1 for g in data["gladys"] if g["dups"])
     n_store = sum(1 for g in data["gladys"] if g["status"] == STORE)
 
     def link(url, label=None):
@@ -239,16 +346,17 @@ def write_xlsx(data, tables, path):
          f"{len(data['ha'])} idées, dont {n_taken} prises ou faites ; "
          f"P1 : {sum(1 for h in p1 if h['status'] != FREE)} / {len(p1)}"],
         ["Intégrations Gladys repérées", f"{len(data['gladys'])} dépôts, dont {n_store} publiés au store"],
-        ["Idées avec plusieurs dépôts (doublons)", str(n_dup)],
+        ["Intégrations Gladys en doublon", str(n_dup)],
         [],
         ["Statuts"],
         [STATUS_FR[STORE], "indexée par le store Gladys"],
-        [STATUS_FR[TOPIC_ONLY], f"dépôt avec le topic {TOPIC}, pas encore indexé (en cours, ou refusé par l'indexeur)"],
-        [STATUS_FR[NO_TOPIC], "dépôt trouvé sur GitHub sans le topic : en cours, ou topic oublié"],
+        [STATUS_FR[TOPIC_ONLY], f"dépôt avec le topic {TOPIC}, pas encore indexé par le store (ou refusé par l'indexeur)"],
+        [STATUS_FR[NO_TOPIC], f"dépôt créé depuis le template, ou avec le topic {WIP_TOPIC} : en développement"],
         [STATUS_FR[CLAIMED], "annoncée sur le forum, aucun dépôt trouvé"],
         [STATUS_FR[FREE], "personne dessus à notre connaissance"],
         [],
-        ["Correspondance", "Équivalente : couvre l'intégration HA. Partielle : en couvre une partie."],
+        ["Correspondance", "Équivalente : couvre l'intégration HA. Partielle : en couvre une partie. "
+                           "Automatique : rapprochée parce qu'elle porte le même nom."],
         ["Hors liste", "intégration Gladys sans entrée dans la liste : la liste a retiré ce que Gladys "
                        "couvrait déjà, et certaines n'existent pas chez HA"],
         [],
@@ -271,7 +379,7 @@ def write_xlsx(data, tables, path):
         ("Liste HA ↔ Gladys", head_ha, rows_ha, 9, {8: "doc", 13: None}, 14,
          [6, 5, 34, 24, 9, 12, 9, 14, 6, 26, 13, 26, 16, 38, 22, 9, 10, 34, 60]),
         ("Intégrations Gladys", head_g, rows_g, 4, {2: None}, 3,
-         [28, 16, 40, 22, 26, 13, 9, 11, 11, 40, 70]),
+         [28, 16, 40, 22, 26, 13, 9, 11, 11, 40, 30, 70]),
     ]
     for title, head, rows, status_col, link_cols, cover_col, widths in sheets:
         ws = wb.create_sheet(title)
@@ -313,10 +421,10 @@ def main():
     shutil.copy(ROOT / "index.html", OUT / "index.html")
 
     n_taken = sum(1 for h in data["ha"] if h["status"] != FREE)
-    n_dup = sum(1 for h in data["ha"] if len(h["matches"]) > 1)
+    n_dup = sum(1 for g in data["gladys"] if g["dups"])
     unmapped = [g["repo"] for g in data["gladys"] if not g["ha"] and g["status"] != STORE]
     print(f"{len(data['ha'])} HA ideas ({n_taken} taken), {len(data['gladys'])} Gladys repositories, "
-          f"{n_dup} duplicates; {len(unmapped)} repositories outside the store and not mapped")
+          f"{n_dup} duplicated Gladys integrations; {len(unmapped)} repositories outside the store and not mapped")
 
 
 if __name__ == "__main__":

@@ -110,7 +110,7 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); white-space: n
 .empty-row td { text-align: center; color: var(--muted); padding: 32px; }
 footer { margin-top: 24px; color: var(--muted); font-size: 13px; }
 footer a { color: var(--muted); text-decoration: underline; }
-.hidden { display: none; }
+.hidden { display: none !important; }
 @media (max-width: 640px) {
   h1 { font-size: 22px; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -140,8 +140,8 @@ footer a { color: var(--muted); text-decoration: underline; }
     <h2 data-i18n="howtoTitle">Tu veux prendre une intégration ?</h2>
     <ol>
       <li data-i18n-html="howto1">Vérifie ici qu'elle est <b>libre</b> (et qu'elle n'apparaît pas déjà dans l'onglet « Intégrations Gladys »).</li>
-      <li data-i18n-html="howto2">Crée ton dépôt GitHub <b>dès le premier jour</b>, avec le topic <code>gladys-assistant-integration</code> : elle apparaît ici comme « en cours » à la prochaine mise à jour.</li>
-      <li data-i18n-html="howto3">Annonce-la sur le <a href="https://community.gladysassistant.com/t/10385">fil du forum</a>. Une correspondance fausse ou manquante ? Une PR sur <code>data/mapping.txt</code> suffit.</li>
+      <li data-i18n-html="howto2">Crée ton dépôt <b>dès le premier jour</b>, depuis le <a href="https://github.com/GladysAssistant/integration-template-js">template</a> et <b>sans</b> le topic du store : il apparaît ici « en cours » à la mise à jour suivante. Le topic <code>gladys-assistant-integration</code> ne se pose qu'à la publication.</li>
+      <li data-i18n-html="howto3">Annonce-la sur le <a href="https://community.gladysassistant.com/t/10385">fil du forum</a>. Tout le reste est automatique.</li>
     </ol>
   </section>
 
@@ -180,26 +180,26 @@ footer a { color: var(--muted); text-decoration: underline; }
       subtitle: "La liste des intégrations Home Assistant de Pierre-Gilles, face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et la liste.",
       howtoTitle: "Tu veux prendre une intégration ?",
       howto1: "Vérifie ici qu'elle est <b>libre</b> (et qu'elle n'apparaît pas déjà dans l'onglet « Intégrations Gladys »).",
-      howto2: "Crée ton dépôt GitHub <b>dès le premier jour</b>, avec le topic <code>gladys-assistant-integration</code> : elle apparaît ici comme « en cours » à la prochaine mise à jour.",
-      howto3: "Annonce-la sur le <a href=\"https://community.gladysassistant.com/t/10385\">fil du forum</a>. Une correspondance fausse ou manquante ? Une PR sur <code>data/mapping.txt</code> suffit.",
+      howto2: "Crée ton dépôt <b>dès le premier jour</b>, depuis le <a href=\"https://github.com/GladysAssistant/integration-template-js\">template</a> et <b>sans</b> le topic du store : il apparaît ici « en cours » à la mise à jour suivante. Le topic <code>gladys-assistant-integration</code> ne se pose qu'à la publication.",
+      howto3: "Annonce-la sur le <a href=\"https://community.gladysassistant.com/t/10385\">fil du forum</a>. Tout le reste est automatique.",
       tabHa: "Liste Home Assistant", tabGl: "Intégrations Gladys",
       search: "Rechercher (nom, marque, auteur, dépôt…)", dupOnly: "Doublons seulement", noHw: "Sans matériel",
       loading: "Chargement…", nothing: "Aucun résultat.", loadError: "Impossible de charger data.json.",
       allStatus: "Tous les statuts", allPrio: "Toutes priorités", allCat: "Toutes catégories",
       statIdeas: "idées dans la liste", statTaken: "déjà prises ou faites",
       statP1: "P1 couvertes", statStore: "intégrations au store", statWip: "dépôts en cours (hors store)",
-      statDup: "idées avec plusieurs dépôts",
+      statDup: "intégrations Gladys en doublon",
       shown: function (n, t) { return n + " sur " + t; },
       cNum: "N°", cPrio: "Prio", cHa: "Intégration Home Assistant", cCat: "Catégorie", cUsage: "Usage HA",
       cStatus: "Statut", cGladys: "Intégration Gladys", cCover: "Cover", cName: "Intégration", cAuthor: "Auteur",
       cVersion: "Version", cHaEq: "Équivalent dans la liste", cSince: "Vue depuis",
-      st: { store: "Publiée", topic: "Dépôt, pas au store", no_topic: "Dépôt sans topic", claimed: "Revendiquée", free: "Libre" },
-      partial: "partielle", dup: "doublon", outside: "hors liste", noCover: "pas de cover",
+      st: { store: "Publiée", topic: "Pas encore au store", no_topic: "En cours", claimed: "Revendiquée", free: "Libre" },
+      partial: "partielle", auto: "auto, même nom", dup: "doublon", dupWith: "doublon avec", outside: "hors liste", noCover: "pas de cover",
       footer: function (d) {
         return "Généré le " + d + ". Sources : ";
       },
       srcList: "liste de Pierre-Gilles", srcStore: "store Gladys", srcForum: "fil forum", srcTopic: "topic GitHub",
-      downloads: "Télécharger : ", xlsx: "classeur .xlsx", csvHa: "CSV liste HA", csvGl: "CSV intégrations Gladys",
+      refresh: "Mettre à jour maintenant", downloads: "Télécharger : ", xlsx: "classeur .xlsx", csvHa: "CSV liste HA", csvGl: "CSV intégrations Gladys",
       other: "Langue", themeLabel: "Thème"
     },
     en: {
@@ -207,26 +207,26 @@ footer a { color: var(--muted); text-decoration: underline; }
       subtitle: "Pierre-Gilles' list of Home Assistant integrations, next to what already exists for Gladys. Updated automatically from the store, GitHub and the list.",
       howtoTitle: "Want to take an integration?",
       howto1: "Check here that it is <b>free</b> (and not already in the “Gladys integrations” tab).",
-      howto2: "Create your GitHub repository <b>on day one</b>, with the <code>gladys-assistant-integration</code> topic: it shows up here as “in progress” on the next update.",
-      howto3: "Announce it in the <a href=\"https://community.gladysassistant.com/t/10385\">forum topic</a>. A wrong or missing match? A pull request on <code>data/mapping.txt</code> is enough.",
+      howto2: "Create your repository <b>on day one</b>, from the <a href=\"https://github.com/GladysAssistant/integration-template-js\">template</a> and <b>without</b> the store topic: it shows up here as “in progress” on the next update. Add the <code>gladys-assistant-integration</code> topic only when you publish.",
+      howto3: "Announce it in the <a href=\"https://community.gladysassistant.com/t/10385\">forum topic</a>. Everything else is automatic.",
       tabHa: "Home Assistant list", tabGl: "Gladys integrations",
       search: "Search (name, brand, author, repository…)", dupOnly: "Duplicates only", noHw: "No hardware",
       loading: "Loading…", nothing: "No results.", loadError: "Could not load data.json.",
       allStatus: "All statuses", allPrio: "All priorities", allCat: "All categories",
       statIdeas: "ideas in the list", statTaken: "already taken or done",
       statP1: "P1 covered", statStore: "integrations in the store", statWip: "repositories in progress (not in the store)",
-      statDup: "ideas with several repositories",
+      statDup: "duplicated Gladys integrations",
       shown: function (n, t) { return n + " of " + t; },
       cNum: "#", cPrio: "Prio", cHa: "Home Assistant integration", cCat: "Category", cUsage: "HA usage",
       cStatus: "Status", cGladys: "Gladys integration", cCover: "Cover", cName: "Integration", cAuthor: "Author",
       cVersion: "Version", cHaEq: "Match in the list", cSince: "Seen since",
-      st: { store: "Published", topic: "Repo, not in store", no_topic: "Repo without topic", claimed: "Claimed", free: "Free" },
-      partial: "partial", dup: "duplicate", outside: "not in the list", noCover: "no cover",
+      st: { store: "Published", topic: "Not in the store yet", no_topic: "In progress", claimed: "Claimed", free: "Free" },
+      partial: "partial", auto: "auto, same name", dup: "duplicate", dupWith: "duplicate of", outside: "not in the list", noCover: "no cover",
       footer: function (d) {
         return "Generated on " + d + ". Sources: ";
       },
       srcList: "Pierre-Gilles' list", srcStore: "Gladys store", srcForum: "forum topic", srcTopic: "GitHub topic",
-      downloads: "Download: ", xlsx: ".xlsx workbook", csvHa: "HA list CSV", csvGl: "Gladys integrations CSV",
+      refresh: "Update now", downloads: "Download: ", xlsx: ".xlsx workbook", csvHa: "HA list CSV", csvGl: "Gladys integrations CSV",
       other: "Language", themeLabel: "Theme"
     }
   };
@@ -311,7 +311,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     var p1Taken = p1.filter(function (h) { return h.status !== "free"; }).length;
     var inStore = data.gladys.filter(function (g) { return g.status === "store"; }).length;
     var wip = data.gladys.length - inStore;
-    var dup = ha.filter(function (h) { return h.matches.length > 1; }).length;
+    var dup = data.gladys.filter(function (g) { return g.dups.length; }).length;
     function tile(value, label, ratio) {
       return '<div class="stat"><b>' + value + "</b><span>" + esc(label) + "</span>" +
         (ratio != null ? '<div class="bar"><i style="width:' + (ratio * 100).toFixed(1) + '%"></i></div>' : "") + "</div>";
@@ -368,6 +368,7 @@ footer a { color: var(--muted); text-decoration: underline; }
       var g = byRepo[m.repo];
       return '<div class="gl">' + cover(g) + "<div><div>" + esc(g.name) +
         (m.quality === "P" ? ' <span class="small">(' + esc(t("partial")) + ")</span>" : "") +
+        (m.quality === "A" ? ' <span class="small">(' + esc(t("auto")) + ")</span>" : "") +
         (g.status !== "store" ? " " + badge(g.status) : "") + "</div>" +
         '<div class="small">' + repoLink(g.repo) + (g.version ? " · v" + esc(g.version) : "") + "</div></div></div>";
     }).join("");
@@ -387,9 +388,11 @@ footer a { color: var(--muted); text-decoration: underline; }
   function renderGlRow(g) {
     var ha = g.ha.map(function (n) {
       var h = haByNum[n];
-      return '<a href="' + esc(h.link) + '" target="_blank" rel="noopener">' + n + " · " + esc(h.name) + "</a>" +
-        (h.matches.length > 1 ? ' <span class="badge dup">' + esc(t("dup")) + "</span>" : "");
+      return '<a href="' + esc(h.link) + '" target="_blank" rel="noopener">' + n + " · " + esc(h.name) + "</a>";
     }).join("<br>") || '<span class="small">' + esc(t("outside")) + "</span>";
+    if (g.dups.length) {
+      ha += '<div><span class="badge dup">' + esc(t("dupWith")) + "</span> " + g.dups.map(repoLink).join(", ") + "</div>";
+    }
     return "<tr>" +
       "<td>" + cover(g) + "</td>" +
       '<td><span class="ha-name">' + esc(g.name) + '</span><div class="small">' + repoLink(g.repo) + "</div>" +
@@ -417,7 +420,7 @@ footer a { color: var(--muted); text-decoration: underline; }
         if (fh && !r.no_hardware) return false;
         if (q && haText(r).indexOf(q) < 0) return false;
       } else {
-        if (fd && !r.ha.some(function (n) { return haByNum[n].matches.length > 1; })) return false;
+        if (fd && !r.dups.length) return false;
         if (q && glText(r).indexOf(q) < 0) return false;
       }
       return true;
@@ -442,6 +445,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     function a(href, label) { return '<a href="' + esc(href) + '">' + esc(label) + "</a>"; }
     $("footer").innerHTML = esc(t("footer")(fmtDate(data.generated_at))) +
       [a(s.ha_list, t("srcList")), a(s.store, t("srcStore")), a(s.topic, t("srcTopic")), a(s.forum, t("srcForum"))].join(" · ") +
+      (s.workflow ? " · " + a(s.workflow, t("refresh")) : "") +
       "<br>" + esc(t("downloads")) +
       [a("suivi-integrations-gladys.xlsx", t("xlsx")), a("liste-ha-gladys.csv", t("csvHa")),
         a("integrations-gladys.csv", t("csvGl"))].join(" · ");

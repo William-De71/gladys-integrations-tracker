@@ -6,7 +6,8 @@ ou annoncées sur le forum. Pour éviter de développer deux fois la même chose
 
 👉 **https://william-de71.github.io/gladys-integrations-tracker/**
 
-La page est reconstruite automatiquement toutes les 6 heures. On peut aussi télécharger les données :
+La page est reconstruite automatiquement toutes les 6 heures, et peut être
+[mise à jour à la main](#mettre-à-jour-à-la-main) à tout moment. On peut aussi télécharger les données :
 [classeur .xlsx](https://william-de71.github.io/gladys-integrations-tracker/suivi-integrations-gladys.xlsx),
 [CSV de la liste HA](https://william-de71.github.io/gladys-integrations-tracker/liste-ha-gladys.csv),
 [CSV des intégrations Gladys](https://william-de71.github.io/gladys-integrations-tracker/integrations-gladys.csv).
@@ -14,44 +15,74 @@ La page est reconstruite automatiquement toutes les 6 heures. On peut aussi tél
 ## Tu veux prendre une intégration ?
 
 1. Vérifie sur la page qu'elle est **libre**, et qu'elle n'apparaît pas déjà dans l'onglet « Intégrations Gladys ».
-2. **Crée ton dépôt GitHub dès le premier jour**, même vide, avec le topic `gladys-assistant-integration`.
-   C'est ce qui revendique l'intégration : elle apparaît ici comme « en cours » à la mise à jour suivante,
-   sans rien remplir d'autre.
+2. **Crée ton dépôt dès le premier jour**, depuis le template
+   [`integration-template-js`](https://github.com/GladysAssistant/integration-template-js) (bouton « Use this template »),
+   avec un nom qui commence par `gladys-`, et **sans** le topic `gladys-assistant-integration`.
+   C'est ce qui revendique l'intégration : le manifeste du template suffit pour qu'elle apparaisse ici « en cours »
+   à la mise à jour suivante.
 3. Annonce-la sur le [fil du forum](https://community.gladysassistant.com/t/10385).
+4. **À la publication seulement**, ajoute le topic `gladys-assistant-integration` : c'est lui qui la fait entrer au store.
+   Le poser plus tôt ferait apparaître une intégration vide dans le store.
+
+Sans le template, le topic `gladys-integration-wip` fait le même effet : le store l'ignore, la page le repère.
 
 ## Statuts
 
 | Statut | Signification |
 |---|---|
 | Publiée (store) | indexée par le [store Gladys](https://gladysassistant.com/fr/docs/integrations/external/) |
-| Dépôt GitHub, pas encore au store | dépôt avec le topic, pas encore indexé (en cours, ou refusé par l'indexeur) |
-| Dépôt GitHub sans topic store | dépôt repéré à la main sans le topic : en cours, ou topic oublié |
+| Topic store posé, pas encore indexée | dépôt avec le topic du store, pas encore indexé (ou refusé par l'indexeur) |
+| En cours (dépôt GitHub) | dépôt créé depuis le template, ou avec le topic `gladys-integration-wip` |
 | Revendiquée (forum) | annoncée sur le forum, aucun dépôt trouvé |
 | Libre | personne dessus à notre connaissance |
 
-Une idée avec plusieurs dépôts est marquée **doublon**.
+Une idée avec plusieurs dépôts, ou deux intégrations Gladys du même nom, sont marquées **doublon**.
 
-## D'où viennent les données
+## Tout est automatique
 
-`build.py` relit à chaque exécution :
+Toutes les 6 heures, `build.py` relit tout, sans rien à tenir à jour à la main :
 
-- le CSV du gist de Pierre-Gilles (`3_full-list.csv`) ;
-- l'index du store : `https://integration-store-storage.gladysassistant.com/index.json` (nom, version, cover) ;
-- les dépôts GitHub qui ont le topic [`gladys-assistant-integration`](https://github.com/topics/gladys-assistant-integration).
+- la liste de Pierre-Gilles : le CSV du gist (`3_full-list.csv`) ;
+- le store : `https://integration-store-storage.gladysassistant.com/index.json` (nom, version, cover) ;
+- les dépôts GitHub qui ont le topic [`gladys-assistant-integration`](https://github.com/topics/gladys-assistant-integration) ;
+- les dépôts GitHub nommés « gladys… » qui contiennent un manifeste `gladys-assistant-integration.json` :
+  c'est le cas de tout dépôt créé depuis le template, ce qui permet de revendiquer une intégration dès le premier jour ;
+- les dépôts GitHub qui ont le topic `gladys-integration-wip`, même vides.
 
-Trois fichiers sont tenus à la main, dans `data/` :
-
-| Fichier | Contenu | Format |
-|---|---|---|
-| `mapping.txt` | correspondance entre une idée de la liste et un dépôt Gladys | `N° HA \| propriétaire/dépôt \| E` (équivalente) ou `P` (partielle) |
-| `claims.txt` | intégrations annoncées sur le forum, sans dépôt | `N° HA \| qui \| source` |
-| `extra-repos.txt` | dépôts Gladys qui n'ont pas le topic | `propriétaire/dépôt` |
-
-Le rapprochement n'est pas automatique : un nouveau dépôt apparaît d'abord dans l'onglet « Intégrations Gladys »
-avec la mention « hors liste ». **Une correspondance manque ou est fausse ? Ouvre une pull request sur `data/mapping.txt`.**
+Le rapprochement est automatique aussi : une intégration Gladys est reliée à l'idée de la liste qui porte le même nom.
+La règle est stricte exprès, parce qu'une fausse correspondance serait pire qu'une correspondance manquante : ce qui ne
+porte pas le même nom apparaît dans l'onglet « Intégrations Gladys » avec la mention « hors liste », et reste trouvable
+par la recherche. Les **doublons** sont repérés automatiquement : deux intégrations Gladys qui portent le même nom, ou
+qui correspondent à la même idée de la liste.
 
 « Hors liste » est normal pour beaucoup d'intégrations : la liste a retiré ce que Gladys couvrait déjà
 (Philips Hue, Sonos, Netatmo…), et certaines n'existent pas chez Home Assistant.
+
+Les annonces du forum ne sont pas lues automatiquement : les messages mélangent revendications, bilans et idées, et une
+fausse « revendication » ferait croire qu'une intégration est prise. C'est le dépôt qui fait foi.
+
+### Corrections facultatives
+
+Rien n'est obligatoire, mais trois fichiers de `data/` permettent d'affiner :
+
+| Fichier | Usage | Format |
+|---|---|---|
+| `mapping.txt` | relier une idée et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° HA \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
+| `claims.txt` | signaler une intégration annoncée sans dépôt | `N° HA \| qui \| source` |
+| `extra-repos.txt` | ajouter un dépôt que les recherches ne trouvent pas | `propriétaire/dépôt` |
+
+Un push sur ces fichiers relance la page tout de suite, sans attendre la mise à jour suivante.
+
+## Mettre à jour à la main
+
+Sans attendre les 6 heures, deux façons :
+
+- sur GitHub : onglet [Actions → Build and publish](https://github.com/William-De71/gladys-integrations-tracker/actions/workflows/build.yml)
+  → bouton **Run workflow** (lien « Mettre à jour maintenant » en bas de la page) ;
+- en ligne de commande : `gh workflow run build.yml -R William-De71/gladys-integrations-tracker`.
+
+La page est à jour environ une minute plus tard. Il faut les droits d'écriture sur le dépôt : un contributeur qui
+n'en a pas peut demander une mise à jour sur le forum, ou attendre le passage suivant.
 
 ## Lancer en local
 
@@ -66,10 +97,8 @@ python3 -m http.server -d site 8000
 
 Dans les réglages du dépôt : **Settings → Pages → Build and deployment → Source : GitHub Actions**.
 Le workflow `build.yml` tourne ensuite toutes les 6 heures, à chaque push sur `data/`, `build.py` ou `index.html`,
-et à la demande (onglet Actions → *Build and publish* → *Run workflow*).
-
-GitHub met en pause les workflows planifiés d'un dépôt sans commit depuis 60 jours : il suffit alors de le
-réactiver dans l'onglet Actions.
+et à la demande (onglet Actions → *Build and publish* → *Run workflow*). Il se réactive lui-même à chaque passage,
+pour que GitHub ne suspende pas la tâche planifiée faute d'activité sur le dépôt.
 
 ---
 
@@ -77,5 +106,8 @@ réactiver dans l'onglet Actions.
 
 Tracks which integrations from Pierre-Gilles' Home Assistant list already exist for Gladys (in the store, in progress
 on GitHub, or claimed on the forum), so that two developers don't build the same one. Rebuilt every 6 hours from the
-store index, the `gladys-assistant-integration` GitHub topic and the list. To claim an integration, create your
-repository on day one with that topic. To fix a match, open a pull request on `data/mapping.txt`.
+store index, GitHub (the `gladys-assistant-integration` topic and repositories holding a Gladys manifest) and the list. To claim an integration, create your
+repository on day one from the integration template, without the store topic (or with the
+`gladys-integration-wip` topic), and add `gladys-assistant-integration` only when you publish. Updates also run on
+demand: Actions → Build and publish → Run workflow. Discovery, matching and duplicate detection are automatic; `data/` only holds
+optional corrections.

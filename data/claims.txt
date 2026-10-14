@@ -1,4 +1,4 @@
-# HA# | qui | source
+# Annonces du forum sans dépôt (facultatif). Format : N° dans la liste HA | qui | source
 2|En pause (abandonnée le 9 oct.)|forum #32
 41|lmilcent|forum #78
 52|lmilcent|forum #78

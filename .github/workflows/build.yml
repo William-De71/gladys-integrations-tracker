@@ -17,6 +17,7 @@ on:
       - ".github/workflows/build.yml"
 
 permissions:
+  actions: write
   contents: read
   pages: write
   id-token: write
@@ -36,6 +37,12 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python build.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # GitHub suspends scheduled workflows after 60 days without activity on the repository.
+      # Enabling the workflow on every run keeps the schedule alive with nothing to do by hand.
+      - name: Keep the schedule alive
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/build.yml/enable"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/configure-pages@v5

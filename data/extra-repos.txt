@@ -1,4 +1,4 @@
-# Dépôts Gladys sans topic gladys-assistant-integration, ajoutés à la main
+# Dépôts Gladys que les recherches automatiques ne trouvent pas (facultatif). Format : propriétaire/dépôt
 LM1LC3N7/gladys-lutron
 cicoub13/gladys-ecowitt
 prohand/gladys-teleinfo
