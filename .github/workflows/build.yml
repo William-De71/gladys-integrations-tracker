@@ -5,7 +5,8 @@ name: Build and publish
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    # Off the round minutes, which GitHub delays or skips the most when it is busy.
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
   push:
     branches: [main]

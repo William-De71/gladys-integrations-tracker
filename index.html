@@ -60,10 +60,14 @@ a.btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: no
 .to-top.visible { opacity: 1; pointer-events: auto; transform: none; }
 .to-top:hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) { .to-top { transition: none; } }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 24px 0; }
+.updated { margin: 8px 0 0; font-size: 14px; color: var(--muted); }
+.updated b { color: var(--text); font-weight: 600; }
+.updated.late, .updated.late b { color: var(--dup); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
 .stat b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .stat span { color: var(--muted); font-size: 13px; }
+.stat.prio-tile b small { font-size: 15px; color: var(--muted); font-weight: 500; }
 .bar { height: 6px; border-radius: 3px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--store); }
 .howto {
@@ -141,6 +145,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     <div>
       <h1 data-i18n="title">Suivi des intégrations Gladys</h1>
       <p class="sub" data-i18n="subtitle">La liste des intégrations Home Assistant de Pierre-Gilles, face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et la liste.</p>
+      <p class="updated" id="updated" aria-live="polite"></p>
     </div>
     <div class="tools">
       <a class="btn btn-primary" id="refresh" target="_blank" rel="noopener"
@@ -204,7 +209,14 @@ footer a { color: var(--muted); text-decoration: underline; }
       loading: "Chargement…", nothing: "Aucun résultat.", loadError: "Impossible de charger data.json.",
       allStatus: "Tous les statuts", allPrio: "Toutes priorités", allCat: "Toutes catégories",
       statIdeas: "idées dans la liste", statTaken: "déjà prises ou faites",
-      statP1: "P1 couvertes", statStore: "intégrations au store", statWip: "dépôts en cours (hors store)",
+      statPrio: function (p) { return "idées " + p + " couvertes"; },
+      updated: "Dernière mise à jour :", late: "en retard, cliquez sur « Mettre à jour »",
+      ago: function (m) {
+        if (m < 1) return "à l'instant";
+        if (m < 60) return "il y a " + m + " min";
+        var h = Math.floor(m / 60);
+        return "il y a " + h + " h" + (m % 60 ? " " + (m % 60) + " min" : "");
+      }, statStore: "intégrations au store", statWip: "dépôts en cours (hors store)",
       statDup: "intégrations Gladys en doublon",
       shown: function (n, t) { return n + " sur " + t; },
       cNum: "N°", cPrio: "Prio", cHa: "Intégration Home Assistant", cCat: "Catégorie", cUsage: "Usage HA",
@@ -233,7 +245,14 @@ footer a { color: var(--muted); text-decoration: underline; }
       loading: "Loading…", nothing: "No results.", loadError: "Could not load data.json.",
       allStatus: "All statuses", allPrio: "All priorities", allCat: "All categories",
       statIdeas: "ideas in the list", statTaken: "already taken or done",
-      statP1: "P1 covered", statStore: "integrations in the store", statWip: "repositories in progress (not in the store)",
+      statPrio: function (p) { return p + " ideas covered"; },
+      updated: "Last update:", late: "late, click “Update”",
+      ago: function (m) {
+        if (m < 1) return "just now";
+        if (m < 60) return m + " min ago";
+        var h = Math.floor(m / 60);
+        return h + " h" + (m % 60 ? " " + (m % 60) + " min" : "") + " ago";
+      }, statStore: "integrations in the store", statWip: "repositories in progress (not in the store)",
       statDup: "duplicated Gladys integrations",
       shown: function (n, t) { return n + " of " + t; },
       cNum: "#", cPrio: "Prio", cHa: "Home Assistant integration", cCat: "Category", cUsage: "HA usage",
@@ -331,19 +350,21 @@ footer a { color: var(--muted); text-decoration: underline; }
   function renderStats() {
     var ha = data.ha;
     var taken = ha.filter(function (h) { return h.status !== "free"; }).length;
-    var p1 = ha.filter(function (h) { return h.prio === "P1"; });
-    var p1Taken = p1.filter(function (h) { return h.status !== "free"; }).length;
     var inStore = data.gladys.filter(function (g) { return g.status === "store"; }).length;
     var wip = data.gladys.filter(function (g) { return g.status === "topic" || g.status === "no_topic"; }).length;
     var dup = data.gladys.filter(function (g) { return g.dups.length; }).length;
-    function tile(value, label, ratio) {
-      return '<div class="stat"><b>' + value + "</b><span>" + esc(label) + "</span>" +
+    function tile(value, label, ratio, cls) {
+      return '<div class="stat' + (cls ? " " + cls : "") + '"><b>' + value + "</b><span>" + esc(label) + "</span>" +
         (ratio != null ? '<div class="bar"><i style="width:' + (ratio * 100).toFixed(1) + '%"></i></div>' : "") + "</div>";
     }
     $("stats").innerHTML =
       tile(ha.length, t("statIdeas")) +
       tile(taken, t("statTaken"), taken / ha.length) +
-      tile(p1Taken + " / " + p1.length, t("statP1"), p1Taken / p1.length) +
+      ["P1", "P2", "P3", "P4"].map(function (p) {
+        var all = ha.filter(function (h) { return h.prio === p; });
+        var done = all.filter(function (h) { return h.status !== "free"; }).length;
+        return tile(done + " <small>/ " + all.length + "</small>", t("statPrio")(p), all.length ? done / all.length : 0, "prio-tile");
+      }).join("") +
       tile(inStore, t("statStore")) +
       tile(wip, t("statWip")) +
       tile(dup, t("statDup"));
@@ -481,11 +502,25 @@ footer a { color: var(--muted); text-decoration: underline; }
         a("integrations-gladys.csv", t("csvGl"))].join(" · ");
   }
 
+  // The page is rebuilt every 15 minutes: past 45, something is stuck and a manual update is worth it.
+  var LATE_AFTER_MINUTES = 45;
+  function renderUpdated() {
+    if (!data) return;
+    var minutes = Math.max(0, Math.floor((Date.now() - new Date(data.generated_at).getTime()) / 60000));
+    var late = minutes > LATE_AFTER_MINUTES;
+    var el = $("updated");
+    el.classList.toggle("late", late);
+    el.innerHTML = esc(t("updated")) + " <b>" + esc(fmtDate(data.generated_at)) + "</b> (" + esc(t("ago")(minutes)) + ")" +
+      (late ? " · ⚠ " + esc(t("late")) : "");
+  }
+  setInterval(renderUpdated, 60000);
+
   function renderAll() {
     applyStatic();
     setupFilters();
     if (!data) return;
     renderStats();
+    renderUpdated();
     renderFooter();
     render();
   }

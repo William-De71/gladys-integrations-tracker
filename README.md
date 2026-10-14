@@ -6,7 +6,7 @@ ou annoncées sur le forum. Pour éviter de développer deux fois la même chose
 
 👉 **https://william-de71.github.io/gladys-integrations-tracker/**
 
-La page est reconstruite automatiquement toutes les 6 heures, et peut être
+La page est reconstruite automatiquement toutes les 15 minutes, et peut être
 [mise à jour à la main](#mettre-à-jour-à-la-main) à tout moment. On peut aussi télécharger les données :
 [classeur .xlsx](https://william-de71.github.io/gladys-integrations-tracker/suivi-integrations-gladys.xlsx),
 [CSV de la liste HA](https://william-de71.github.io/gladys-integrations-tracker/liste-ha-gladys.csv),
@@ -42,7 +42,7 @@ Une idée avec plusieurs dépôts, ou deux intégrations Gladys du même nom, so
 
 ## Tout est automatique
 
-Toutes les 6 heures, `build.py` relit tout, sans rien à tenir à jour à la main :
+Toutes les 15 minutes, `build.py` relit tout, sans rien à tenir à jour à la main :
 
 - la liste de Pierre-Gilles : le CSV du gist (`3_full-list.csv`) ;
 - le store : `https://integration-store-storage.gladysassistant.com/index.json` (nom, version, cover) ;
@@ -80,7 +80,7 @@ Un push sur ces fichiers relance la page tout de suite, sans attendre la mise à
 
 ## Mettre à jour à la main
 
-Sans attendre les 6 heures, deux façons :
+Sans attendre le passage suivant, deux façons :
 
 - sur GitHub : onglet [Actions → Build and publish](https://github.com/William-De71/gladys-integrations-tracker/actions/workflows/build.yml)
   → bouton **Run workflow** (le bouton « Mettre à jour » en haut de la page y mène) ;
@@ -101,9 +101,13 @@ python3 -m http.server -d site 8000
 ## Mise en place (une seule fois)
 
 Dans les réglages du dépôt : **Settings → Pages → Build and deployment → Source : GitHub Actions**.
-Le workflow `build.yml` tourne ensuite toutes les 6 heures, à chaque push sur `data/`, `build.py` ou `index.html`,
+Le workflow `build.yml` tourne ensuite toutes les 15 minutes, à chaque push sur `data/`, `build.py` ou `index.html`,
 et à la demande (onglet Actions → *Build and publish* → *Run workflow*). Il se réactive lui-même à chaque passage,
 pour que GitHub ne suspende pas la tâche planifiée faute d'activité sur le dépôt.
+
+GitHub ne garantit pas l'heure des tâches planifiées : quand ses serveurs sont chargés, il les retarde, et en saute
+parfois. Le workflow tourne donc à des minutes peu demandées (:07, :22, :37, :52), et la page affiche l'heure de sa
+dernière mise à jour : au-delà de 45 minutes, elle le signale en rouge, et le bouton « Mettre à jour » rattrape le retard.
 
 ---
 
