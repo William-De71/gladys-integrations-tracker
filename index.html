@@ -395,7 +395,7 @@ footer a { color: var(--muted); text-decoration: underline; }
         '<div class="small">' + repoLink(g.repo) + (g.version ? " · v" + esc(g.version) : "") + "</div></div></div>";
     }).join("");
     if (!gl && h.claim) gl = '<span class="small">' + esc(h.claim) + "</span>";
-    var dup = h.matches.length > 1 ? ' <span class="badge dup">' + esc(t("dup")) + " ×" + h.matches.length + "</span>" : "";
+    var dup = h.dup ? ' <span class="badge dup">' + esc(t("dup")) + " ×" + h.matches.length + "</span>" : "";
     return "<tr>" +
       '<td class="num">' + h.n + "</td>" +
       '<td><span class="prio">' + esc(h.prio) + "</span></td>" +
@@ -438,7 +438,7 @@ footer a { color: var(--muted); text-decoration: underline; }
       if (isHa) {
         if (fp && r.prio !== fp) return false;
         if (fc && r.category.split(" / ").indexOf(fc) < 0) return false;
-        if (fd && r.matches.length < 2) return false;
+        if (fd && !r.dup) return false;
         if (fh && !r.no_hardware) return false;
         if (q && haText(r).indexOf(q) < 0) return false;
       } else {

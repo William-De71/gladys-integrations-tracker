@@ -254,6 +254,8 @@ def build():
             no_hardware=h["No hardware needed"] == "yes", area=h["Area"], link=h["Reference link"],
             desc=h["Description"], status=FREE, quality="", claim="",
             matches=[dict(repo=g["repo"], quality=q) for g, q in matches],
+            # Several full matches for one idea; a partial match only complements the others.
+            dup=sum(1 for _, q in matches if q != "P") > 1,
         )
         if matches:
             row["status"] = matches[0][0]["status"]
@@ -274,7 +276,8 @@ def build():
         full_name = re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", re.sub(r"\(.*?\)", "", g["name"]))
                            .encode("ascii", "ignore").decode().lower()).strip()
         by_name.setdefault(full_name, []).append(g)
-    groups = [[g for g, _ in lst] for lst in mapping.values()] + list(by_name.values())
+    # A partial match complements an integration rather than duplicating it.
+    groups = [[g for g, q in lst if q != "P"] for lst in mapping.values()] + list(by_name.values())
     for group in groups:
         for g in group:
             g["dups"].update(x["repo"] for x in group if x is not g)
@@ -310,7 +313,7 @@ def flat_tables(data):
             first["name"] if first else "", first["author"] if first else "",
             f"https://github.com/{first['repo']}" if first else "",
             first["cover"] if first else "", first["version"] if first else "",
-            f"oui ({len(h['matches'])})" if others else "",
+            f"oui ({len(h['matches'])})" if h["dup"] else "",
             ", ".join(others) or h["claim"], h["desc"],
         ])
     head_g = ["Intégration Gladys", "Auteur", "Dépôt GitHub", "Cover", "Statut", "Type", "Version",
