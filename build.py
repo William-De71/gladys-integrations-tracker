@@ -9,16 +9,18 @@ Everything is found again on every run, with nothing to maintain by hand:
     (every repository created from the integration template has one), or that have the
     gladys-integration-wip topic: integrations in progress, which the store ignores;
   - archived or deleted repositories, checked on GitHub itself (the store index can lag behind);
+  - claims posted in the forum topic ("je prends X"), until a repository shows up;
   - HA list ↔ Gladys matches: integrations whose names are the same are matched automatically.
 
 Optional corrections, never required:
   - data/mapping.txt: HA list number | repository | E (equivalent), P (partial) or - (wrong automatic match);
-  - data/claims.txt: forum claims that have no repository yet;
+  - data/claims.txt: claims the forum reading misses;
   - data/extra-repos.txt: Gladys repositories the searches cannot find.
 
 Output, in site/: data.json (read by index.html), one CSV per table, and an .xlsx workbook.
 """
 import csv
+import html
 import io
 import json
 import shutil
@@ -45,7 +47,16 @@ GIST_URL = f"https://gist.github.com/Pierre-Gilles/{GIST_ID}"
 GIST_CSV = f"https://gist.githubusercontent.com/Pierre-Gilles/{GIST_ID}/raw/3_full-list.csv"
 STORE_INDEX = "https://integration-store-storage.gladysassistant.com/index.json"
 STORE_PAGE = "https://gladysassistant.com/fr/docs/integrations/external/"
-FORUM_TOPIC = "https://community.gladysassistant.com/t/10385"
+FORUM = "https://community.gladysassistant.com"
+FORUM_TOPIC = f"{FORUM}/t/10385"
+# How a developer claims an integration in the forum topic, and what ends the claim within the same sentence.
+CLAIM_WORDS = r"(je prends|je reprends|j ai lance le dev|je lance le dev|je m occupe de|je pars sur|je me lance sur)"
+CLAIM_STOPS = (r"(reste chez|restent chez|pris par|prise par|je n y touche pas|deja pris|deja fait|deja dans le store"
+               r"|n est pas|sortie|sorties|est sortie)")
+# HA list names that also come up as everyday words in claims ("vu sous une vidéo YouTube", "vérifié sur GitHub").
+CLAIM_IGNORED = {"youtube", "github"}
+# Status posts list ideas without claiming them.
+CLAIM_AUTHORS_IGNORED = {"pierre-gilles"}
 TOPIC = "gladys-assistant-integration"
 # Claims an integration without the store topic: the store would list an empty repository with it.
 WIP_TOPIC = "gladys-integration-wip"
@@ -64,7 +75,7 @@ STATUS_FR = {
     TOPIC_ONLY: "Topic store posé, pas encore indexée",
     NO_TOPIC: "En cours (dépôt GitHub)",
     INACTIVE: "Hors store, inactive",
-    CLAIMED: "Revendiquée (forum)",
+    CLAIMED: "Annoncée sur le forum",
     FREE: "Libre",
     ARCHIVED: "Archivée ou supprimée",
 }
@@ -269,6 +280,52 @@ def auto_matches(ha, gladys):
     return found
 
 
+def forum_posts():
+    topic = json.loads(fetch(FORUM_TOPIC + ".json"))
+    ids = topic["post_stream"]["stream"]
+    posts = []
+    for start in range(0, len(ids), 20):
+        query = "&".join(f"post_ids[]={i}" for i in ids[start:start + 20])
+        posts += json.loads(fetch(f"{FORUM_TOPIC}/posts.json?{query}"))["post_stream"]["posts"]
+    return posts
+
+
+def spaced(text):
+    """Lowercase ASCII words, padded with spaces so that " name " only matches whole words."""
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
+    return " " + re.sub(r"[^a-z0-9]+", " ", text).strip() + " "
+
+
+def forum_claims(ha):
+    """HA list number → the latest forum post claiming it: the text right after "je prends", up to the next claim
+    or to a phrase saying the idea belongs to someone else, and only HA names written in full."""
+    names = []
+    for h in ha:
+        for name in {spaced(h["Integration"]), spaced(re.sub(r"\(.*?\)", "", h["Integration"]))}:
+            if len(name.strip()) >= 4 and name.strip() not in CLAIM_IGNORED:
+                names.append((name, h["#"]))
+    claims = {}
+    try:
+        posts = forum_posts()
+    except Exception as e:
+        print(f"forum not read: {e}", file=sys.stderr)
+        return claims
+    for p in posts:
+        if p["username"] in CLAIM_AUTHORS_IGNORED:
+            continue
+        cooked = re.sub(r'<aside class="quote.*?</aside>', " ", p["cooked"], flags=re.S)
+        text = spaced(html.unescape(re.sub(r"<[^>]+>", " ", cooked)))
+        for m in re.finditer(CLAIM_WORDS, text):
+            part = text[m.end():m.end() + 500]
+            end = re.search(CLAIM_WORDS + "|" + CLAIM_STOPS, part)
+            part = " " + (part[:end.start()] if end else part) + " "
+            for name, num in names:
+                if name in part:
+                    claims[num] = dict(who=p["username"], date=p["created_at"][:10], post=p["post_number"],
+                                       url=f"{FORUM_TOPIC}/{p['post_number']}")
+    return claims
+
+
 def build():
     ha = load_ha_list()
     gladys, index_date = load_gladys()
@@ -286,6 +343,7 @@ def build():
         if (num, g["repo"]) not in rejected and all(x is not g for x, _ in mapping.get(num, [])):
             mapping.setdefault(num, []).append((g, "A"))
     claims = {num: (who, src) for num, who, src in read_table(DATA / "claims.txt")}
+    announced = forum_claims(ha)
     # Repositories that no longer cover an idea keep their match for the record, but count neither as coverage
     # nor as duplicates.
     live = {num: [(g, q) for g, q in lst if covers(g)] for num, lst in mapping.items()}
@@ -298,7 +356,7 @@ def build():
             n=int(num), prio=h["Priority"], name=h["Integration"], category=h["Category"],
             usage=h["HA usage (% of installations)"], access=h["Access"],
             no_hardware=h["No hardware needed"] == "yes", area=h["Area"], link=h["Reference link"],
-            desc=h["Description"], status=FREE, quality="", claim="",
+            desc=h["Description"], status=FREE, quality="", claim="", claim_url="",
             matches=[dict(repo=g["repo"], quality=q) for g, q in matches],
             # Several full matches for one idea; a partial match only complements the others.
             dup=sum(1 for _, q in matches if q != "P") > 1,
@@ -309,6 +367,13 @@ def build():
         elif num in claims:
             row["status"] = CLAIMED
             row["claim"] = " — ".join(claims[num])
+        elif num in announced and datetime.now(timezone.utc) - parse_date(announced[num]["date"] + "T00:00:00Z") \
+                <= INACTIVE_AFTER:
+            # A claim without a repository after 30 days frees the idea again, like an inactive repository.
+            a = announced[num]
+            row["status"] = CLAIMED
+            row["claim"] = f"{a['who']}, forum #{a['post']} ({a['date']})"
+            row["claim_url"] = a["url"]
         elif h["Status"] != "Available":
             row["status"] = CLAIMED
             row["claim"] = f"gist: {h['Status']}"
@@ -405,7 +470,7 @@ def write_xlsx(data, tables, path):
         [STATUS_FR[INACTIVE], "dépôt hors store sans commit depuis plus de 30 jours ; une copie du template jamais "
                               "remplie ne compte plus pour l'idée"],
         [STATUS_FR[ARCHIVED], "dépôt archivé ou supprimé : ne compte plus pour l'idée"],
-        [STATUS_FR[CLAIMED], "annoncée sur le forum, aucun dépôt trouvé"],
+        [STATUS_FR[CLAIMED], "« je prends … » sur le fil du forum, sans dépôt pour l'instant ; l'annonce expire au bout de 30 jours"],
         [STATUS_FR[FREE], "personne dessus à notre connaissance"],
         [],
         ["Correspondance", "Équivalente : couvre l'intégration HA. Partielle : en couvre une partie. "

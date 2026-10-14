@@ -35,7 +35,7 @@ Sans le template, le topic `gladys-integration-wip` fait le même effet : le sto
 | En cours (dépôt GitHub) | dépôt créé depuis le template, ou avec le topic `gladys-integration-wip` |
 | Hors store, inactive | dépôt hors store sans commit depuis plus de 30 jours : l'intégration existe et compte pour l'idée, sauf si c'est une copie du template jamais remplie |
 | Archivée ou supprimée | dépôt archivé ou supprimé sur GitHub, même si le store le liste encore : ne compte plus pour l'idée |
-| Revendiquée (forum) | annoncée sur le forum, aucun dépôt trouvé |
+| Annoncée sur le forum | « je prends … » sur le [fil du forum](https://community.gladysassistant.com/t/10385), sans dépôt pour l'instant ; l'annonce expire au bout de 30 jours |
 | Libre | personne dessus à notre connaissance |
 
 Une idée avec plusieurs dépôts, ou deux intégrations Gladys du même nom, sont marquées **doublon**.
@@ -60,8 +60,11 @@ qui correspondent à la même idée de la liste.
 « Hors liste » est normal pour beaucoup d'intégrations : la liste a retiré ce que Gladys couvrait déjà
 (Philips Hue, Sonos, Netatmo…), et certaines n'existent pas chez Home Assistant.
 
-Les annonces du forum ne sont pas lues automatiquement : les messages mélangent revendications, bilans et idées, et une
-fausse « revendication » ferait croire qu'une intégration est prise. C'est le dépôt qui fait foi.
+Les annonces du [fil du forum](https://community.gladysassistant.com/t/10385) sont lues aussi : la page cherche
+les noms de la liste écrits en entier juste après « je prends » (ou « je m'occupe de », « je pars sur »…), jusqu'à la
+phrase suivante qui dit que l'idée appartient à quelqu'un d'autre (« reste chez », « pris par »…). Les messages de bilan
+de Pierre-Gilles et les citations sont ignorés. Chaque annonce renvoie vers son message, pour vérifier d'un clic, et
+s'efface d'elle-même au bout de 30 jours sans dépôt. Dès qu'un dépôt existe, c'est lui qui fait foi.
 
 ### Corrections facultatives
 
@@ -70,7 +73,7 @@ Rien n'est obligatoire, mais trois fichiers de `data/` permettent d'affiner :
 | Fichier | Usage | Format |
 |---|---|---|
 | `mapping.txt` | relier une idée et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° HA \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
-| `claims.txt` | signaler une intégration annoncée sans dépôt | `N° HA \| qui \| source` |
+| `claims.txt` | signaler une annonce que la lecture du forum a manquée | `N° HA \| qui \| source` |
 | `extra-repos.txt` | ajouter un dépôt que les recherches ne trouvent pas | `propriétaire/dépôt` |
 
 Un push sur ces fichiers relance la page tout de suite, sans attendre la mise à jour suivante.
