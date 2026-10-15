@@ -171,3 +171,5 @@
 882|guim31/gladys-integration-unifi|P
 179|guim31/gladys-solarman|P
 351|William-De71/gladys-waste-collection-schedule|P
+353|guim31/gladys-traccar|E
+542|guim31/gladys-traccar|P
