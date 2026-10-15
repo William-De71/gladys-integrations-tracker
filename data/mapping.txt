@@ -1,6 +1,6 @@
 # Corrections du rapprochement automatique (facultatif : tout le reste est automatique).
 # Format : N° dans la liste HA | propriétaire/dépôt | E (équivalente), P (partielle) ou - (correspondance automatique fausse)
-122|guim31/gladys-solaredge|-
+122|guim31/gladys-solaredge|P
 1|guim31/gladys-met-no|E
 3|guim31/gladys-ping-wol|E
 4|guim31/gladys-fritzbox|E
