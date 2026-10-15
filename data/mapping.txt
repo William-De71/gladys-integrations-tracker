@@ -197,3 +197,4 @@ F49|PhilippeMA/gladys-Meross|P
 F35|Terdious/gladys-tuya|P
 F80|guim31/gladys-tesla|P
 F69|callemand/gladys-melcloud-home|P
+157|gboulvin/Gladys-Huawei-Solar|E
