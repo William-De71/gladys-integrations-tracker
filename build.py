@@ -255,6 +255,12 @@ def ha_names(h):
     return {n for n in (norm(name), norm(re.sub(r"\(.*?\)", "", name))) if len(n) >= 3}
 
 
+def ha_parts(h):
+    """Each part of a "A / B" HA name: "La Poste / Colissimo / Chronopost tracking" also goes by "La Poste"."""
+    name = re.sub(r"\(.*?\)", "", h["Integration"])
+    return {n for n in (norm(p) for p in name.split(" / ")) if len(n) >= 3} if " / " in name else set()
+
+
 def gladys_names(g):
     """Names a Gladys integration goes by: its name, each part of a "A / B" name, and its repository name."""
     name = re.sub(r"\(.*?\)", "", g["name"])
@@ -271,6 +277,15 @@ def auto_matches(ha, gladys):
     for h in ha:
         for n in ha_names(h):
             by_name.setdefault(n, set()).add(h["#"])
+    # A part of a "A / B" name counts only when it points to that idea alone: "Verisure" in
+    # "Securitas Direct / Verisure" is an idea of its own, and "Fire TV" comes up in two ideas.
+    parts = {}
+    for h in ha:
+        for n in ha_parts(h) - ha_names(h):
+            parts.setdefault(n, set()).add(h["#"])
+    for n, nums in parts.items():
+        if n not in by_name and len(nums) == 1:
+            by_name[n] = nums
     found = []
     for g in gladys.values():
         nums = set()

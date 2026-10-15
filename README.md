@@ -52,6 +52,8 @@ Toutes les 15 minutes, `build.py` relit tout, sans rien à tenir à jour à la m
 - les dépôts GitHub qui ont le topic `gladys-integration-wip`, même vides.
 
 Le rapprochement est automatique aussi : une intégration Gladys est reliée à l'idée de la liste qui porte le même nom.
+Une idée nommée « A / B » compte aussi sous chacun de ses noms (« La Poste / Colissimo / Chronopost tracking » sous
+« La Poste »), sauf quand l'un d'eux est déjà une autre idée de la liste ou revient dans plusieurs idées.
 La règle est stricte exprès, parce qu'une fausse correspondance serait pire qu'une correspondance manquante : ce qui ne
 porte pas le même nom apparaît dans l'onglet « Intégrations Gladys » avec la mention « hors liste », et reste trouvable
 par la recherche. Les **doublons** sont repérés automatiquement : deux intégrations Gladys qui portent le même nom, ou
