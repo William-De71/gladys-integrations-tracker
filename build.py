@@ -294,10 +294,14 @@ def ha_parts(h):
 
 
 def gladys_names(g):
-    """Names a Gladys integration goes by: its name, each part of a "A / B" name, and its repository name."""
+    """Names a Gladys integration goes by: its name, each part of a "A / B" name, and its repository name. Later
+    parts also go by the brand of the first one: "IKEA DIRIGERA & TRÅDFRI" covers "IKEA TRÅDFRI"."""
     name = re.sub(r"\(.*?\)", "", g["name"])
     names = {norm(g["name"]), norm(name), norm(without_domain(name))}
-    names.update(norm(p) for p in re.split(r" / |, | & ", name))
+    parts = [norm(p) for p in re.split(r" / |, | & ", name)]
+    names.update(parts)
+    brand = parts[0].split()[0] if len(parts) > 1 and parts[0] else ""
+    names.update(f"{brand} {p}" for p in parts[1:] if p and not p.startswith(brand + " "))
     stem = re.sub(r"(?i)^gladys[-_]?|[-_]?gladys$|[-_]integration$|^integration[-_]", "", g["repo"].split("/")[1])
     names.add(norm(stem.replace("-", " ").replace("_", " ")))
     return {n for n in names if len(n) >= 3}
