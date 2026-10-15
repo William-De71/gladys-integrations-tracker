@@ -3,7 +3,6 @@
 122|guim31/gladys-solaredge|-
 1|guim31/gladys-met-no|E
 3|guim31/gladys-ping-wol|E
-3|quentinlegay/gladys-wakeonlan|E
 4|guim31/gladys-fritzbox|E
 5|guim31/gladys-brother|E
 6|William-De71/gladys-sonoff-ewelink|E

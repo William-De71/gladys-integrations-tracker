@@ -11,7 +11,6 @@ prohand/gladys-playstationnetwork
 gboulvin/Gladys-SWDE
 gboulvin/Gladys-Plex
 quentinlegay/gladys-grafana
-quentinlegay/gladys-wakeonlan
 quentinlegay/gladys-nba
 quentinlegay/gladys-sport-games
 b3n0/gladys-yoto

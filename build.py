@@ -271,12 +271,27 @@ def gladys_names(g):
     return {n for n in names if len(n) >= 3}
 
 
+def repo_stem(repo):
+    """gladys-bosch-shc → bosch_shc, written like a Home Assistant integration id."""
+    stem = re.sub(r"(?i)^gladys[-_]?|[-_]?gladys$|[-_]integration$|^integration[-_]", "", repo.split("/")[1])
+    return stem.lower().replace("-", "_")
+
+
+def ha_id(h):
+    """Home Assistant integration id, from the documentation link: .../integrations/bosch_shc/ → bosch_shc."""
+    return h["Reference link"].rstrip("/").split("/")[-1].lower().replace("-", "_")
+
+
 def auto_matches(ha, gladys):
-    """Same name on both sides. Strict on purpose: a wrong match is worse than a missing one."""
-    by_name = {}
+    """Same name on both sides, or a repository named after the Home Assistant integration id (gladys-bosch-shc for
+    bosch_shc). Strict on purpose: a wrong match is worse than a missing one. Ids of a single word are left out,
+    since they can mislead: Home Assistant's "fritzbox" is FRITZ!SmartHome, not the FRITZ!Box."""
+    by_name, by_id = {}, {}
     for h in ha:
         for n in ha_names(h):
             by_name.setdefault(n, set()).add(h["#"])
+        if "_" in ha_id(h):
+            by_id.setdefault(ha_id(h), set()).add(h["#"])
     # A part of a "A / B" name counts only when it points to that idea alone: "Verisure" in
     # "Securitas Direct / Verisure" is an idea of its own, and "Fire TV" comes up in two ideas.
     parts = {}
@@ -288,7 +303,7 @@ def auto_matches(ha, gladys):
             by_name[n] = nums
     found = []
     for g in gladys.values():
-        nums = set()
+        nums = set(by_id.get(repo_stem(g["repo"]), set()))
         for n in gladys_names(g):
             nums |= by_name.get(n, set())
         found.extend((num, g) for num in nums)
