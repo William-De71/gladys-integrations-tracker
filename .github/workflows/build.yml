@@ -5,7 +5,8 @@ name: Build and publish
 
 on:
   schedule:
-    # Off the round minutes, which GitHub delays or skips the most when it is busy.
+    # Off the round minutes, which GitHub delays or skips the most when it is busy. GitHub fires it only a few times a
+    # day on this repository: it is a fallback that restarts the chain kept up by the "next" job below.
     - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
   push:
@@ -22,10 +23,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
   build:
@@ -54,9 +51,38 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # On the job rather than the workflow, so that the "next" job waiting below does not hold back other runs.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # The schedule cannot be relied on, so every run starts the next one 15 minutes later. A run that finds another
+  # one already queued or running stops there, so that pushes, manual runs and the schedule never pile up chains.
+  # Dispatching with GITHUB_TOKEN is allowed: workflow_dispatch is an exception to the rule that its events start no
+  # workflow.
+  next:
+    needs: deploy
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - run: sleep 840
+      - name: Start the next run
+        run: |
+          others=$(gh run list --repo "$REPO" --workflow build.yml --limit 20 --json databaseId,status \
+            --jq "[.[] | select(.databaseId != $RUN_ID and (.status | IN(\"queued\", \"in_progress\", \"waiting\", \"pending\", \"requested\")))] | length")
+          if [ "$others" -gt 0 ]; then
+            echo "Another run is already queued or running: it keeps the chain going."
+          else
+            gh workflow run build.yml --repo "$REPO" --ref main
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
