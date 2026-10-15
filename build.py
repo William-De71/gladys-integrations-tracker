@@ -51,7 +51,7 @@ STORE_PAGE = "https://gladysassistant.com/fr/docs/integrations/external/"
 FORUM = "https://community.gladysassistant.com"
 FORUM_TOPIC = f"{FORUM}/t/10385"
 # How a developer claims an integration in the forum topic, and what ends the claim within the same sentence.
-CLAIM_WORDS = r"(je prends|je reprends|j ai lance le dev|je lance le dev|je m occupe de|je pars sur|je me lance sur)"
+CLAIM_WORDS = r"(je prends|je reprends|j ai lance le dev|je lance|je m occupe de|je pars sur|je me lance sur)"
 CLAIM_STOPS = (r"(reste chez|restent chez|pris par|prise par|je n y touche pas|deja pris|deja fait|deja dans le store"
                r"|n est pas|sortie|sorties|est sortie)")
 # HA list names that also come up as everyday words in claims ("vu sous une vidéo YouTube", "vérifié sur GitHub").
@@ -389,7 +389,8 @@ def forum_claims(ha):
             rest = text[m.end():]
             end = re.search(CLAIM_WORDS + "|" + CLAIM_STOPS, rest)
             part = " " + (rest[:end.start()] if end else rest) + " "
-            numbers = [n for n in re.findall(r" n (\d{1,4}) ", part) if n in ids]
+            # "n° 74", "n°74" ("°" is dropped, not spaced), "nº 74".
+            numbers = [n for n in re.findall(r" no? ?(\d{1,4}) ", part) if n in ids]
             if numbers:
                 found = set(numbers)
             else:
