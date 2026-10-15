@@ -32,6 +32,7 @@ import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+from functools import cache
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -350,6 +351,7 @@ def auto_matches(ha, gladys):
     return found
 
 
+@cache
 def forum_posts():
     topic = json.loads(fetch(FORUM_TOPIC + ".json"))
     ids = topic["post_stream"]["stream"]
@@ -428,6 +430,10 @@ def build():
             mapping.setdefault(num, []).append((g, "A"))
     claims = {num: (who, src) for num, who, src in read_table(DATA / "claims.txt")}
     announced = forum_claims(ha)
+    try:
+        post_dates = {p["post_number"]: p["created_at"][:10] for p in forum_posts()}
+    except Exception:
+        post_dates = {}
     # Repositories that no longer cover an idea keep their match for the record, but count neither as coverage
     # nor as duplicates.
     live = {num: [(g, q) for g, q in lst if covers(g)] for num, lst in mapping.items()}
@@ -453,8 +459,11 @@ def build():
             row["status"] = NATIVE
         elif num in claims:
             row["status"] = CLAIMED
-            row["claim"] = " — ".join(claims[num])
-            post = re.search(r"forum #(\d+)", claims[num][1])
+            who, src = claims[num]
+            post = re.search(r"forum #(\d+)", src)
+            # Dated like the claims read in the forum when the post is known.
+            date = post_dates.get(int(post.group(1))) if post else None
+            row["claim"] = f"{who}, {src} ({date})" if date else f"{who} — {src}"
             row["claim_url"] = f"{FORUM_TOPIC}/{post.group(1)}" if post else ""
         elif num in announced and datetime.now(timezone.utc) - parse_date(announced[num]["date"] + "T00:00:00Z") \
                 <= INACTIVE_AFTER:
