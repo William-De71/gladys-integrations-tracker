@@ -2,7 +2,8 @@
 """Build the tracker: Pierre-Gilles' Home Assistant list ↔ Gladys external integrations.
 
 Everything is found again on every run, with nothing to maintain by hand:
-  - Pierre-Gilles' gist (3_full-list.csv);
+  - Pierre-Gilles' gist (3_full-list.csv), and data/ha-forum-juillet.csv: the popular HA integrations of his
+    July analysis (forum post #1) that the gist left out because Gladys already covered them;
   - the live Gladys store index (index.json);
   - GitHub repositories with the gladys-assistant-integration topic (published, or about to be);
   - GitHub repositories named "gladys…" that contain a gladys-assistant-integration.json manifest
@@ -69,7 +70,7 @@ WORKFLOW_PAGE = "https://github.com/William-De71/gladys-integrations-tracker/act
 
 # Status keys, from the most to the least advanced. The page and the workbook translate them.
 STORE, TOPIC_ONLY, NO_TOPIC, INACTIVE, ARCHIVED = "store", "topic", "no_topic", "inactive", "archived"
-CLAIMED, FREE = "claimed", "free"
+NATIVE, CLAIMED, FREE = "native", "claimed", "free"
 STATUS_FR = {
     STORE: "Publiée (store)",
     TOPIC_ONLY: "Topic store posé, pas encore indexée",
@@ -77,6 +78,7 @@ STATUS_FR = {
     INACTIVE: "Hors store, inactive",
     CLAIMED: "Annoncée sur le forum",
     FREE: "Libre",
+    NATIVE: "Native Gladys",
     ARCHIVED: "Archivée ou supprimée",
 }
 RANK = [STORE, TOPIC_ONLY, NO_TOPIC, INACTIVE, ARCHIVED]
@@ -108,7 +110,25 @@ def read_table(path):
 
 
 def load_ha_list():
-    return list(csv.DictReader(io.StringIO(fetch(GIST_CSV))))
+    """Pierre-Gilles' list, then the July analysis entries (ids F1, F2…), in the same columns."""
+    ideas = list(csv.DictReader(io.StringIO(fetch(GIST_CSV))))
+    for h in ideas:
+        h["_source"], h["_native"], h["_note"] = "list", False, ""
+    with open(DATA / "ha-forum-juillet.csv", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            ideas.append({
+                "#": r["id"], "Priority": r["priority"], "Integration": r["name"], "Category": r["category"],
+                "HA usage (% of installations)": r["ha_usage_pct"], "Access": r["access"],
+                "No hardware needed": "", "Area": "Worldwide", "Status": "Available",
+                "Description": r["description"], "Reference link": r["link"],
+                "_source": "forum", "_native": r["native_gladys"] == "oui", "_note": r["forum_table"],
+            })
+    return ideas
+
+
+def order(num):
+    """Sort key: the July analysis entries (F1, F2…) first, then the list from 1 to 1190."""
+    return int(num) if num.isdigit() else int(num[1:]) - 100000
 
 
 def exists(url):
@@ -395,7 +415,8 @@ def build():
         num = h["#"]
         matches = sorted(live.get(num, []), key=lambda m: (RANK.index(m[0]["status"]), "EPA".index(m[1])))
         row = dict(
-            n=int(num), prio=h["Priority"], name=h["Integration"], category=h["Category"],
+            n=int(num) if num.isdigit() else num, order=order(num), source=h["_source"], note=h["_note"],
+            prio=h["Priority"], name=h["Integration"], category=h["Category"],
             usage=h["HA usage (% of installations)"], access=h["Access"],
             no_hardware=h["No hardware needed"] == "yes", area=h["Area"], link=h["Reference link"],
             desc=h["Description"], status=FREE, quality="", claim="", claim_url="",
@@ -406,6 +427,8 @@ def build():
         if matches:
             row["status"] = matches[0][0]["status"]
             row["quality"] = matches[0][1]
+        elif h["_native"]:
+            row["status"] = NATIVE
         elif num in claims:
             row["status"] = CLAIMED
             row["claim"] = " — ".join(claims[num])
@@ -420,11 +443,13 @@ def build():
             row["status"] = CLAIMED
             row["claim"] = f"gist: {h['Status']}"
         ha_rows.append(row)
+    ha_rows.sort(key=lambda r: r["order"])
 
     # Two Gladys integrations are duplicates when they match the same HA idea, or share a name.
     by_name = {}
     for g in gladys.values():
-        g["ha"] = sorted((int(n) for n, lst in mapping.items() if any(x is g for x, _ in lst)))
+        g["ha"] = [int(n) if n.isdigit() else n
+                   for n in sorted((n for n, lst in mapping.items() if any(x is g for x, _ in lst)), key=order)]
         g["dups"] = set()
         full_name = re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", re.sub(r"\(.*?\)", "", g["name"]))
                            .encode("ascii", "ignore").decode().lower()).strip()
@@ -455,7 +480,7 @@ def flat_tables(data):
     head_ha = ["N°", "Prio", "Intégration Home Assistant", "Catégorie", "Usage HA", "Accès",
                "Sans matériel", "Zone", "Doc HA / HACS", "Statut Gladys", "Correspondance",
                "Intégration Gladys", "Auteur", "Dépôt GitHub", "Cover", "Version", "Doublon",
-               "Autres dépôts / note", "Description HA"]
+               "Autres dépôts / note", "Description HA", "Source"]
     rows_ha = []
     for h in data["ha"]:
         first = by_repo[h["matches"][0]["repo"]] if h["matches"] else None
@@ -469,6 +494,7 @@ def flat_tables(data):
             first["cover"] if first else "", first["version"] if first else "",
             f"oui ({len(h['matches'])})" if h["dup"] else "",
             ", ".join(others) or h["claim"], h["desc"],
+            "Liste de Pierre-Gilles" if h["source"] == "list" else f"Analyse forum de juillet ({h['note']})",
         ])
     head_g = ["Intégration Gladys", "Auteur", "Dépôt GitHub", "Cover", "Statut", "Type", "Version",
               "Vue depuis", "Dernier push", "Équivalent HA (liste)", "Doublon avec", "Description"]
@@ -483,8 +509,10 @@ def flat_tables(data):
 
 def write_xlsx(data, tables, path):
     (head_ha, rows_ha), (head_g, rows_g) = tables
-    n_taken = sum(1 for h in data["ha"] if h["status"] != FREE)
-    p1 = [h for h in data["ha"] if h["prio"] == "P1"]
+    ideas = [h for h in data["ha"] if h["source"] == "list"]
+    july = [h for h in data["ha"] if h["source"] == "forum"]
+    n_taken = sum(1 for h in ideas if h["status"] != FREE)
+    p1 = [h for h in ideas if h["prio"] == "P1"]
     n_dup = sum(1 for g in data["gladys"] if g["dups"])
     n_store = sum(1 for g in data["gladys"] if g["status"] == STORE)
 
@@ -500,13 +528,17 @@ def write_xlsx(data, tables, path):
          f"(index du store : {data['store_index_at'][:16].replace('T', ' ')} UTC)"],
         [],
         ["Liste Home Assistant (gist de Pierre-Gilles)",
-         f"{len(data['ha'])} idées, dont {n_taken} prises ou faites ; "
+         f"{len(ideas)} idées, dont {n_taken} prises ou faites ; "
          f"P1 : {sum(1 for h in p1 if h['status'] != FREE)} / {len(p1)}"],
+        ["Analyse forum de juillet (F1, F2…)",
+         f"{len(july)} intégrations populaires que la liste a retirées car Gladys les couvrait déjà ; "
+         f"{sum(1 for h in july if h['status'] != FREE)} couvertes"],
         ["Intégrations Gladys repérées", f"{len(data['gladys'])} dépôts, dont {n_store} publiés au store"],
         ["Intégrations Gladys en doublon", str(n_dup)],
         [],
         ["Statuts"],
         [STATUS_FR[STORE], "indexée par le store Gladys"],
+        [STATUS_FR[NATIVE], "couverte par le cœur de Gladys, sans intégration externe"],
         [STATUS_FR[TOPIC_ONLY], f"dépôt avec le topic {TOPIC}, pas encore indexé par le store (ou refusé par l'indexeur)"],
         [STATUS_FR[NO_TOPIC], f"dépôt créé depuis le template, ou avec le topic {WIP_TOPIC} : en développement"],
         [STATUS_FR[INACTIVE], "dépôt hors store sans commit depuis plus de 30 jours ; une copie du template jamais "
@@ -534,10 +566,11 @@ def write_xlsx(data, tables, path):
     ws.column_dimensions["B"].width = 110
 
     fills = {STATUS_FR[STORE]: "C6EFCE", STATUS_FR[TOPIC_ONLY]: "FFEB9C",
-             STATUS_FR[NO_TOPIC]: "FCE4D6", STATUS_FR[INACTIVE]: "E7E6E6", STATUS_FR[CLAIMED]: "DDEBF7"}
+             STATUS_FR[NO_TOPIC]: "FCE4D6", STATUS_FR[INACTIVE]: "E7E6E6", STATUS_FR[CLAIMED]: "DDEBF7",
+             STATUS_FR[NATIVE]: "D9E1F2"}
     sheets = [
         ("Liste HA ↔ Gladys", head_ha, rows_ha, 9, {8: "doc", 13: None}, 14,
-         [6, 5, 34, 24, 9, 12, 9, 14, 6, 26, 13, 26, 16, 38, 22, 9, 10, 34, 60]),
+         [6, 5, 34, 24, 9, 12, 9, 14, 6, 26, 13, 26, 16, 38, 22, 9, 10, 34, 60, 30]),
         ("Intégrations Gladys", head_g, rows_g, 4, {2: None}, 3,
          [28, 16, 40, 22, 26, 13, 9, 11, 11, 40, 30, 70]),
     ]
@@ -580,10 +613,12 @@ def main():
     write_xlsx(data, tables, OUT / "suivi-integrations-gladys.xlsx")
     shutil.copy(ROOT / "index.html", OUT / "index.html")
 
-    n_taken = sum(1 for h in data["ha"] if h["status"] != FREE)
+    n_taken = sum(1 for h in data["ha"] if h["status"] != FREE and h["source"] == "list")
+    july = [h for h in data["ha"] if h["source"] == "forum"]
     n_dup = sum(1 for g in data["gladys"] if g["dups"])
     unmapped = [g["repo"] for g in data["gladys"] if not g["ha"] and g["status"] != STORE]
-    print(f"{len(data['ha'])} HA ideas ({n_taken} taken), {len(data['gladys'])} Gladys repositories, "
+    print(f"{len(data['ha']) - len(july)} HA ideas ({n_taken} taken), "
+          f"{len(july)} July entries ({sum(1 for h in july if h['status'] != FREE)} covered), {len(data['gladys'])} Gladys repositories, "
           f"{n_dup} duplicated Gladys integrations; {len(unmapped)} repositories outside the store and not mapped")
 
 

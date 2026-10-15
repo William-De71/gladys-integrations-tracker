@@ -1,0 +1,83 @@
+id,priority,name,category,ha_usage_pct,access,native_gladys,forum_table,description,link
+F1,P1,Google Cast,Multimedia,50.80%,Local,oui,Déjà couvert par Gladys,"Chromecast, enceintes Google Nest et TV Google : lecture et contrôle",https://www.home-assistant.io/integrations/cast/
+F2,P1,Bluetooth,Protocols & hubs,49.00%,Local,oui,Déjà couvert par Gladys,Adaptateurs Bluetooth et appareils BLE,https://www.home-assistant.io/integrations/bluetooth/
+F3,P1,MQTT,Protocols & hubs,48.60%,Local,oui,Déjà couvert par Gladys,Broker MQTT et appareils qui publient en MQTT,https://www.home-assistant.io/integrations/mqtt/
+F4,P1,Matter,Protocols & hubs,39.20%,Local,oui,Déjà couvert par Gladys,Appareils Matter (Wi-Fi et Thread),https://www.home-assistant.io/integrations/matter/
+F5,P1,UPnP / IGD,Network & presence,32.90%,Local,,Appareils (juillet),Statistiques de la box ou du routeur,https://www.home-assistant.io/integrations/upnp/
+F6,P1,Tuya,"Lighting, plugs & covers",29.60%,Cloud,oui,Déjà couvert par Gladys,Appareils Tuya / Smart Life par le cloud,https://www.home-assistant.io/integrations/tuya/
+F7,P1,IPP (imprimantes),Network & presence,29.30%,Local,,Appareils (juillet),Niveau d’encre et état des imprimantes réseau,https://www.home-assistant.io/integrations/ipp/
+F8,P1,DLNA Digital Media Renderer,Multimedia,28.20%,Local,,Appareils (juillet),"Lecteurs média UPnP (TV, amplis, enceintes)",https://www.home-assistant.io/integrations/dlna_dmr/
+F9,P1,ESPHome,Protocols & hubs,26.80%,Local,,Appareils (juillet),"Firmware DIY sur ESP32/ESP8266 (capteurs, relais, écrans)",https://www.home-assistant.io/integrations/esphome/
+F10,P1,Zigbee (ZHA / Zigbee2MQTT),Protocols & hubs,26.00%,Local,oui,Déjà couvert par Gladys,"Appareils Zigbee : ZHA côté HA, Zigbee2MQTT côté Gladys",https://www.home-assistant.io/integrations/zha/
+F11,P1,Shelly,"Lighting, plugs & covers",24.90%,Local,,Appareils (juillet),"Micromodules relais, volets et énergie",https://www.home-assistant.io/integrations/shelly/
+F12,P1,DLNA Digital Media Server,Multimedia,20.80%,Local,,Appareils (juillet),Serveurs média UPnP,https://www.home-assistant.io/integrations/dlna_dms/
+F13,P1,Android TV Remote,Multimedia,20.80%,Local,,Appareils (juillet),Télécommande Android TV / Google TV,https://www.home-assistant.io/integrations/androidtv_remote/
+F14,P1,HomeKit Bridge,Voice assistants,17.20%,Local,oui,Déjà couvert par Gladys,Exposer la maison à Apple Maison / Siri,https://www.home-assistant.io/integrations/homekit/
+F15,P1,Samsung Smart TV,Multimedia,17.10%,Local,,Appareils (juillet),"TV Samsung (marche/arrêt, sources, volume)",https://www.home-assistant.io/integrations/samsungtv/
+F16,P1,Sonos,Multimedia,16.20%,Local,oui,Déjà couvert par Gladys,"Enceintes Sonos : lecture, volume, groupes",https://www.home-assistant.io/integrations/sonos/
+F17,P1,Philips Hue,"Lighting, plugs & covers",16.00%,Local,oui,Déjà couvert par Gladys,Ampoules et accessoires Hue par le pont,https://www.home-assistant.io/integrations/hue/
+F18,P1,Apple TV / AirPlay,Multimedia,15.80%,Local,oui,Déjà couvert par Gladys,Apple TV et diffusion AirPlay,https://www.home-assistant.io/integrations/apple_tv/
+F19,P1,HomeKit Controller,Protocols & hubs,14.90%,Local,,Appareils (juillet),"Accessoires HomeKit (Eve, Aqara, Meross, Nanoleaf…) en local",https://www.home-assistant.io/integrations/homekit_controller/
+F20,P1,TP-Link,"Lighting, plugs & covers",13.90%,Local,oui,Déjà couvert par Gladys,"Prises, ampoules et interrupteurs TP-Link Kasa / Tapo",https://www.home-assistant.io/integrations/tplink/
+F21,P1,LG webOS TV,Multimedia,12.40%,Local,,Appareils (juillet),TV LG,https://www.home-assistant.io/integrations/webostv/
+F22,P1,Electricity Maps,Energy,12.20%,Cloud,,Appareils (juillet),Intensité carbone du réseau électrique,https://www.home-assistant.io/integrations/co2signal/
+F23,P1,Forecast.Solar,Energy,11.90%,Cloud,,Appareils (juillet),Prévision de production photovoltaïque,https://www.home-assistant.io/integrations/forecast_solar/
+F24,P1,Reolink,Cameras & security,10.90%,Local,,Appareils (juillet),Caméras et sonnettes Reolink,https://www.home-assistant.io/integrations/reolink/
+F25,P1,Synology DSM,Network & presence,9.50%,Local,,Appareils (juillet),"NAS Synology (état, volumes, caméras Surveillance Station)",https://www.home-assistant.io/integrations/synology_dsm/
+F26,P1,Roborock,Appliances & garden,9.30%,Cloud,,Appareils (juillet),Aspirateurs robots Roborock,https://www.home-assistant.io/integrations/roborock/
+F27,P1,Z-Wave JS,Protocols & hubs,8.40%,Local,oui,Déjà couvert par Gladys,Appareils Z-Wave par Z-Wave JS,https://www.home-assistant.io/integrations/zwave_js/
+F28,P1,Tasmota,"Lighting, plugs & covers",8.10%,Local,oui,Déjà couvert par Gladys,Appareils flashés Tasmota,https://www.home-assistant.io/integrations/tasmota/
+F29,P1,UniFi Network,Network & presence,7.30%,Local,,Appareils (juillet),"Présence par le réseau, clients Wi-Fi",https://www.home-assistant.io/integrations/unifi/
+F30,P1,Spotify,Multimedia,6.60%,Cloud,,Appareils (juillet),Lecture et contrôle Spotify,https://www.home-assistant.io/integrations/spotify/
+F31,P1,Ring,Cameras & security,6.30%,Cloud,,Appareils (juillet),Sonnettes et caméras Ring,https://www.home-assistant.io/integrations/ring/
+F32,P1,WLED,"Lighting, plugs & covers",6.20%,Local,,Appareils (juillet),Rubans LED adressables,https://www.home-assistant.io/integrations/wled/
+F33,P1,Broadlink,Protocols & hubs,6.10%,Local,oui,Déjà couvert par Gladys,Télécommandes IR/RF universelles Broadlink,https://www.home-assistant.io/integrations/broadlink/
+F34,P1,Speedtest.net,Network & presence,6.10%,Cloud,,Appareils (juillet),Débit de la connexion internet,https://www.home-assistant.io/integrations/speedtestdotnet/
+F35,P1,LocalTuya / Tuya Local,"Lighting, plugs & covers",6.05%,Local,,Top HACS (juillet),"Appareils Tuya en local, sans le cloud (HACS : 31 589 installations)",https://github.com/rospogrigio/localtuya
+F36,P1,Xiaomi BLE,Weather & environment,5.20%,Local,oui,Déjà couvert par Gladys,"Capteurs Bluetooth Xiaomi (thermomètres, plantes…)",https://www.home-assistant.io/integrations/xiaomi_ble/
+F37,P1,Telegram Bot,Messaging & notifications,5.00%,Cloud,oui,Déjà couvert par Gladys,Discuter avec la maison et recevoir les notifications sur Telegram,https://www.home-assistant.io/integrations/telegram_bot/
+F38,P1,Home Connect,Appliances & garden,5.00%,Cloud,,Appareils (juillet),Électroménager Bosch / Siemens / Neff / Gaggenau,https://www.home-assistant.io/integrations/home_connect/
+F39,P1,WebRTC Camera,Cameras & security,4.98%,Local,,Top HACS (juillet),Flux caméra à faible latence (HACS : 26 021 installations),https://github.com/AlexxIT/WebRTC
+F40,P1,Frigate,Cameras & security,4.85%,Local,,Top HACS (juillet),Détection d’objets par IA sur les caméras (HACS : 25 321 installations),https://github.com/blakeblackshear/frigate-hass-integration
+F41,P1,OpenWeatherMap,Weather & environment,4.70%,Cloud,oui,Déjà couvert par Gladys,Météo et prévisions OpenWeather,https://www.home-assistant.io/integrations/openweathermap/
+F42,P1,Alexa Devices / Alexa Media Player,Multimedia,4.70%,Cloud,,Appareils (juillet),"Piloter les Echo comme des enceintes : annonces, volume, lecture (HACS : 29 004 installations)",https://www.home-assistant.io/integrations/alexa_devices/
+F43,P1,Denon AVR,Multimedia,4.60%,Local,,Appareils (juillet),Amplis home-cinéma Denon / Marantz,https://www.home-assistant.io/integrations/denonavr/
+F44,P1,OpenAI Conversation,Voice assistants,4.50%,Cloud,oui,Déjà couvert par Gladys,Assistant conversationnel OpenAI,https://www.home-assistant.io/integrations/openai_conversation/
+F45,P1,LG ThinQ,Appliances & garden,4.50%,Cloud,,Appareils (juillet),Électroménager LG (avec SmartThinQ de HACS : 10 143 installations),https://www.home-assistant.io/integrations/lg_thinq/
+F46,P1,Netatmo,Heating & cooling,4.30%,Cloud,oui,Déjà couvert par Gladys,"Thermostats, stations météo et caméras Netatmo",https://www.home-assistant.io/integrations/netatmo/
+F47,P1,Network UPS Tools (NUT),Network & presence,4.30%,Local,,Appareils (juillet),État et batterie des onduleurs,https://www.home-assistant.io/integrations/nut/
+F48,P1,AdGuard Home,Network & presence,4.30%,Local,,Appareils (juillet),Filtrage DNS,https://www.home-assistant.io/integrations/adguard/
+F49,P1,Meross LAN,"Lighting, plugs & covers",4.25%,Local,,Top HACS (juillet),Prises et interrupteurs Meross en local (HACS : 22 175 installations),https://github.com/krahabb/meross_lan
+F50,P1,Fully Kiosk Browser,Services & daily life,4.20%,Local,,Appareils (juillet),Tablette Android en tableau de bord mural,https://www.home-assistant.io/integrations/fully_kiosk/
+F51,P1,Plex,Multimedia,3.70%,Local,,Appareils (juillet),Serveur média Plex,https://www.home-assistant.io/integrations/plex/
+F52,P1,Google Assistant,Voice assistants,3.60%,Cloud,oui,Déjà couvert par Gladys,Piloter la maison depuis Google Assistant,https://www.home-assistant.io/integrations/google_assistant/
+F53,P1,Xiaomi Home,Protocols & hubs,3.36%,Cloud,,Top HACS (juillet),Intégration officielle Xiaomi (Mi Home) (HACS : 17 563 installations),https://github.com/XiaoMi/ha_xiaomi_home
+F54,P1,MCP Server,Voice assistants,3.30%,Local,oui,Déjà couvert par Gladys,Exposer la maison aux assistants IA (Model Context Protocol),https://www.home-assistant.io/integrations/mcp_server/
+F55,P1,Tapo Control,Cameras & security,3.00%,Local,,Top HACS (juillet),Caméras TP-Link Tapo (HACS : 15 678 installations),https://github.com/JurajNyiri/HomeAssistant-Tapo-Control
+F56,P1,Overkiz,"Lighting, plugs & covers",2.90%,Cloud,,Appareils (juillet),"Somfy TaHoma / Connexoon, Atlantic Cozytouch, Hitachi, Bubendorff…",https://www.home-assistant.io/integrations/overkiz/
+F57,P1,Dreame Vacuum,Appliances & garden,2.70%,Cloud,,Top HACS (juillet),Aspirateurs robots Dreame (HACS : 14 091 installations),https://github.com/Tasshack/dreame-vacuum
+F58,P1,Xiaomi Miio,Appliances & garden,2.30%,Local,oui,Déjà couvert par Gladys,"Appareils Xiaomi Wi-Fi (aspirateurs, purificateurs…) en local",https://www.home-assistant.io/integrations/xiaomi_miio/
+F59,P1,Roku,Multimedia,2.30%,Local,,Appareils (juillet),Lecteurs et TV Roku,https://www.home-assistant.io/integrations/roku/
+F60,P1,Yeelight,"Lighting, plugs & covers",2.30%,Local,,Appareils (juillet),Ampoules Xiaomi / Yeelight,https://www.home-assistant.io/integrations/yeelight/
+F61,P1,CalDAV,Services & daily life,2.10%,Cloud,oui,Déjà couvert par Gladys,"Calendriers CalDAV (Nextcloud, iCloud…)",https://www.home-assistant.io/integrations/caldav/
+F62,P1,Amazon Alexa,Voice assistants,2.00%,Cloud,oui,Déjà couvert par Gladys,Piloter la maison depuis Alexa,https://www.home-assistant.io/integrations/alexa/
+F63,P1,Ecovacs,Appliances & garden,2.00%,Cloud,,Appareils (juillet),Aspirateurs Deebot,https://www.home-assistant.io/integrations/ecovacs/
+F64,P1,Enphase Envoy,Energy,1.90%,Local,,Appareils (juillet),Passerelle Enphase : micro-onduleurs solaires,https://www.home-assistant.io/integrations/enphase_envoy/
+F65,P1,Eufy Security,Cameras & security,1.81%,Cloud,,Top HACS (juillet),"Caméras, sonnettes et serrures eufy (HACS : 9 438 installations)",https://github.com/fuatakgun/eufy_security
+F66,P1,Pirate Weather,Weather & environment,1.72%,Cloud,,Top HACS (juillet),"Météo mondiale, clé gratuite (HACS : 9 000 installations)",https://github.com/Pirate-Weather/pirate-weather-ha
+F67,P1,SMTP,Messaging & notifications,1.70%,Cloud,,Communication (juillet),Notifications par e-mail,https://www.home-assistant.io/integrations/smtp/
+F68,P1,Jellyfin,Multimedia,1.50%,Local,,Appareils (juillet),Serveur média libre,https://www.home-assistant.io/integrations/jellyfin/
+F69,P1,MELCloud,Heating & cooling,1.30%,Cloud,oui,Déjà couvert par Gladys,Climatiseurs et pompes à chaleur Mitsubishi Electric,https://www.home-assistant.io/integrations/melcloud/
+F70,P1,Daikin Onecta,Heating & cooling,1.21%,Cloud,,Top HACS (juillet),Climatiseurs Daikin par le cloud Onecta (HACS : 6 291 installations),https://github.com/jwillemsen/daikin_onecta
+F71,P1,Proxmox VE,Network & presence,1.20%,Local,,Appareils (juillet),Hyperviseur Proxmox (état des VM),https://www.home-assistant.io/integrations/proxmoxve/
+F72,P1,Tesla Wall Connector,Energy,1.20%,Local,,Appareils (juillet),Borne de recharge Tesla,https://www.home-assistant.io/integrations/tesla_wall_connector/
+F73,P1,August / Yale,Cameras & security,1.10%,Cloud,,Appareils (juillet),Serrures connectées August et Yale,https://www.home-assistant.io/integrations/august/
+F74,P1,Freebox,Network & presence,1.10%,Local,,Appareils (juillet),"Box Free : présence, Freebox Delta domotique",https://www.home-assistant.io/integrations/freebox/
+F75,P1,Onkyo,Multimedia,1.10%,Local,,Appareils (juillet),Amplis Onkyo,https://www.home-assistant.io/integrations/onkyo/
+F76,P1,Twinkly,"Lighting, plugs & covers",1.10%,Local,,Appareils (juillet),Guirlandes lumineuses Twinkly,https://www.home-assistant.io/integrations/twinkly/
+F77,P2,Apple iCloud,Network & presence,0.90%,Cloud,,Appareils (juillet),Présence via iPhone (Localiser),https://www.home-assistant.io/integrations/icloud/
+F78,P2,World Air Quality Index (WAQI),Weather & environment,0.90%,Cloud,,Appareils (juillet),Qualité de l’air extérieur,https://www.home-assistant.io/integrations/waqi/
+F79,P2,Pushover,Messaging & notifications,0.90%,Cloud,,Communication (juillet),Notifications push mobiles,https://www.home-assistant.io/integrations/pushover/
+F80,P2,Tesla Fleet,Energy,0.80%,Cloud,,Appareils (juillet),Véhicules Tesla,https://www.home-assistant.io/integrations/tesla_fleet/
+F81,P2,Nuki,Cameras & security,0.70%,Local,oui,Déjà couvert par Gladys,Serrures connectées Nuki,https://www.home-assistant.io/integrations/nuki/
+F82,P2,ntfy,Messaging & notifications,0.30%,Local,,Communication (juillet),Notifications push auto-hébergeables,https://www.home-assistant.io/integrations/ntfy/

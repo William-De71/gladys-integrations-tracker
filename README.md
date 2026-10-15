@@ -26,11 +26,25 @@ La page est reconstruite automatiquement toutes les 15 minutes, et peut être
 
 Sans le template, le topic `gladys-integration-wip` fait le même effet : le store l'ignore, la page le repère.
 
+## Les deux sources de la liste Home Assistant
+
+- **La liste de Pierre-Gilles** (idées n° 1 à 1190), lue dans son gist à chaque mise à jour. Elle ne contient que ce
+  que Gladys ne couvrait pas encore le 12 octobre 2026.
+- **L'analyse forum de juillet** (entrées F1, F2…, en tête de liste) : les intégrations Home Assistant populaires du
+  [premier message du fil](https://community.gladysassistant.com/t/10385/1) que la liste a retirées parce que Gladys
+  les couvrait déjà, en natif (MQTT, Matter, Google Cast…) ou par une intégration du store (Philips Hue, Sonos,
+  Shelly…). Elles sont figées dans `data/ha-forum-juillet.csv`, numérotées par usage décroissant. Sans elles, ces
+  intégrations Gladys apparaissaient « hors liste ».
+
+Les tuiles P1 à P4 restent calculées sur la liste de Pierre-Gilles, pour rester comparables à ses chiffres ;
+l'analyse de juillet a sa propre tuile.
+
 ## Statuts
 
 | Statut | Signification |
 |---|---|
 | Publiée (store) | indexée par le [store Gladys](https://gladysassistant.com/fr/docs/integrations/external/) |
+| Native Gladys | couverte par le cœur de Gladys, sans intégration externe (entrées F de l'analyse de juillet) |
 | Topic store posé, pas encore indexée | dépôt avec le topic du store, pas encore indexé (ou refusé par l'indexeur) |
 | En cours (dépôt GitHub) | dépôt créé depuis le template, ou avec le topic `gladys-integration-wip` |
 | Hors store, inactive | dépôt hors store sans commit depuis plus de 30 jours : l'intégration existe et compte pour l'idée, sauf si c'est une copie du template jamais remplie |
@@ -77,7 +91,7 @@ Rien n'est obligatoire, mais trois fichiers de `data/` permettent d'affiner :
 
 | Fichier | Usage | Format |
 |---|---|---|
-| `mapping.txt` | relier une idée et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° HA \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
+| `mapping.txt` | relier une idée (n° de la liste ou F de l'analyse de juillet) et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° HA \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
 | `claims.txt` | signaler une annonce que la lecture du forum a manquée | `N° HA \| qui \| source` |
 | `extra-repos.txt` | ajouter un dépôt que les recherches ne trouvent pas | `propriétaire/dépôt` |
 

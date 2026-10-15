@@ -63,7 +63,7 @@ a.btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: no
 .updated { margin: 8px 0 0; font-size: 14px; color: var(--muted); }
 .updated b { color: var(--text); font-weight: 600; }
 .updated.late, .updated.late b { color: var(--dup); }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 12px; margin: 24px 0; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
 .stat b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .stat span { color: var(--muted); font-size: 13px; }
@@ -113,6 +113,8 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); white-space: n
 .s-topic { color: var(--topic); background: var(--topic-bg); }
 .s-no_topic { color: var(--notopic); background: var(--notopic-bg); }
 .s-claimed { color: var(--claimed); background: var(--claimed-bg); }
+.s-native { color: var(--accent); background: var(--accent-soft); }
+.src-note { display: inline-block; margin-top: 2px; font-size: 12px; color: var(--accent); }
 .s-free { color: var(--free); background: var(--free-bg); }
 .s-inactive { color: var(--muted); background: var(--surface-2); border: 1px dashed var(--border); }
 .s-archived { color: var(--free); background: var(--free-bg); text-decoration: line-through; }
@@ -176,6 +178,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     <select id="f-status" aria-label="Statut"></select>
     <select id="f-prio" aria-label="Priorité"></select>
     <select id="f-cat" aria-label="Catégorie"></select>
+    <select id="f-src" aria-label="Source"></select>
     <label><input type="checkbox" id="f-dup"> <span data-i18n="dupOnly">Doublons seulement</span></label>
     <label id="nohw-wrap"><input type="checkbox" id="f-nohw"> <span data-i18n="noHw">Sans matériel</span></label>
     <span class="count" id="count"></span>
@@ -222,8 +225,10 @@ footer a { color: var(--muted); text-decoration: underline; }
       cNum: "N°", cPrio: "Prio", cHa: "Intégration Home Assistant", cCat: "Catégorie", cUsage: "Usage HA",
       cStatus: "Statut", cGladys: "Intégration Gladys", cCover: "Cover", cName: "Intégration", cAuthor: "Auteur",
       cVersion: "Version", cHaEq: "Équivalent dans la liste", cSince: "Vue depuis",
-      st: { store: "Publiée", topic: "Pas encore au store", no_topic: "En cours", inactive: "Hors store, inactive", claimed: "Annoncée (forum)", free: "Libre", archived: "Archivée" },
-      announced: "Annoncée :", lastCommit: "dernier commit le", template: "template jamais rempli", partial: "partielle", auto: "auto, même nom", dup: "doublon", dupWith: "doublon avec", outside: "hors liste", noCover: "pas de cover",
+      st: { store: "Publiée", native: "Native Gladys", topic: "Pas encore au store", no_topic: "En cours", inactive: "Hors store, inactive", claimed: "Annoncée (forum)", free: "Libre", archived: "Archivée" },
+      announced: "Annoncée :", allSrc: "Toutes sources", srcListShort: "Liste de Pierre-Gilles",
+      srcForumShort: "Analyse forum de juillet", julyNote: "Analyse forum de juillet",
+      statJuly: "analyse de juillet couvertes (F1…)", lastCommit: "dernier commit le", template: "template jamais rempli", partial: "partielle", auto: "auto, même nom", dup: "doublon", dupWith: "doublon avec", outside: "hors liste", noCover: "pas de cover",
       footer: function (d) {
         return "Généré le " + d + ". Sources : ";
       },
@@ -258,8 +263,10 @@ footer a { color: var(--muted); text-decoration: underline; }
       cNum: "#", cPrio: "Prio", cHa: "Home Assistant integration", cCat: "Category", cUsage: "HA usage",
       cStatus: "Status", cGladys: "Gladys integration", cCover: "Cover", cName: "Integration", cAuthor: "Author",
       cVersion: "Version", cHaEq: "Match in the list", cSince: "Seen since",
-      st: { store: "Published", topic: "Not in the store yet", no_topic: "In progress", inactive: "Not in store, inactive", claimed: "Announced (forum)", free: "Free", archived: "Archived" },
-      announced: "Announced:", lastCommit: "last commit on", template: "template never filled in", partial: "partial", auto: "auto, same name", dup: "duplicate", dupWith: "duplicate of", outside: "not in the list", noCover: "no cover",
+      st: { store: "Published", native: "Built into Gladys", topic: "Not in the store yet", no_topic: "In progress", inactive: "Not in store, inactive", claimed: "Announced (forum)", free: "Free", archived: "Archived" },
+      announced: "Announced:", allSrc: "All sources", srcListShort: "Pierre-Gilles' list",
+      srcForumShort: "July forum analysis", julyNote: "July forum analysis",
+      statJuly: "July analysis covered (F1…)", lastCommit: "last commit on", template: "template never filled in", partial: "partial", auto: "auto, same name", dup: "duplicate", dupWith: "duplicate of", outside: "not in the list", noCover: "no cover",
       footer: function (d) {
         return "Generated on " + d + ". Sources: ";
       },
@@ -271,7 +278,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     }
   };
 
-  var STATUS_ORDER = ["store", "topic", "no_topic", "inactive", "claimed", "free", "archived"];
+  var STATUS_ORDER = ["store", "native", "topic", "no_topic", "inactive", "claimed", "free", "archived"];
   var state = { lang: "fr", tab: "ha", sort: { ha: ["n", 1], gl: ["status", 1] } };
   var data = null, byRepo = {}, haByNum = {};
 
@@ -339,16 +346,21 @@ footer a { color: var(--muted); text-decoration: underline; }
     var isHa = state.tab === "ha";
     $("f-prio").classList.toggle("hidden", !isHa);
     $("f-cat").classList.toggle("hidden", !isHa);
+    $("f-src").classList.toggle("hidden", !isHa);
     $("nohw-wrap").classList.toggle("hidden", !isHa);
     if (!data) return;
     fillSelect($("f-prio"), t("allPrio"), ["P1", "P2", "P3", "P4"]);
+    fillSelect($("f-src"), t("allSrc"), ["list", "forum"], [t("srcListShort"), t("srcForumShort")]);
     var cats = {};
     data.ha.forEach(function (h) { h.category.split(" / ").forEach(function (c) { cats[c] = 1; }); });
     fillSelect($("f-cat"), t("allCat"), Object.keys(cats).sort());
   }
 
   function renderStats() {
-    var ha = data.ha;
+    // The tiles stay on Pierre-Gilles' list, to compare with his figures; the July analysis has its own tile.
+    var ha = data.ha.filter(function (h) { return h.source === "list"; });
+    var july = data.ha.filter(function (h) { return h.source === "forum"; });
+    var julyDone = july.filter(function (h) { return h.status !== "free"; }).length;
     var taken = ha.filter(function (h) { return h.status !== "free"; }).length;
     var inStore = data.gladys.filter(function (g) { return g.status === "store"; }).length;
     var wip = data.gladys.filter(function (g) { return g.status === "topic" || g.status === "no_topic"; }).length;
@@ -365,6 +377,7 @@ footer a { color: var(--muted); text-decoration: underline; }
         var done = all.filter(function (h) { return h.status !== "free"; }).length;
         return tile(done + " <small>/ " + all.length + "</small>", t("statPrio")(p), all.length ? done / all.length : 0, "prio-tile");
       }).join("") +
+      tile(julyDone + " <small>/ " + july.length + "</small>", t("statJuly"), july.length ? julyDone / july.length : 0, "prio-tile") +
       tile(inStore, t("statStore")) +
       tile(wip, t("statWip")) +
       tile(dup, t("statDup"));
@@ -392,12 +405,12 @@ footer a { color: var(--muted); text-decoration: underline; }
     if (key === "status") return STATUS_ORDER.indexOf(row.status);
     if (key === "usage") return parseFloat(row.usage) || 0;
     if (key === "ha") return row.ha.length ? row.ha[0] : 1e9;
-    if (key === "n") return row.n;
+    if (key === "n") return row.order;
     return norm(row[key]);
   }
 
   function haText(h) {
-    var parts = [h.n, h.name, h.category, h.desc, h.area, h.claim];
+    var parts = [h.n, h.name, h.category, h.desc, h.area, h.claim, h.note];
     h.matches.forEach(function (m) {
       var g = byRepo[m.repo];
       parts.push(m.repo, g.name, g.author);
@@ -427,6 +440,7 @@ footer a { color: var(--muted); text-decoration: underline; }
       '<td class="num">' + h.n + "</td>" +
       '<td><span class="prio">' + esc(h.prio) + "</span></td>" +
       '<td><a class="ha-name" href="' + esc(h.link) + '" target="_blank" rel="noopener">' + esc(h.name) + "</a>" +
+      (h.source === "forum" ? '<br><span class="src-note">' + esc(t("julyNote")) + " · " + esc(h.note) + "</span>" : "") +
       '<div class="small">' + esc(h.desc) + "</div></td>" +
       '<td class="small">' + esc(h.category) + "</td>" +
       '<td class="num">' + esc(h.usage) + "</td>" +
@@ -461,12 +475,14 @@ footer a { color: var(--muted); text-decoration: underline; }
     var isHa = state.tab === "ha";
     var rows = isHa ? data.ha : data.gladys;
     var q = norm($("q").value.trim());
+    var fsrc = $("f-src").value;
     var fs = $("f-status").value, fp = $("f-prio").value, fc = $("f-cat").value;
     var fd = $("f-dup").checked, fh = $("f-nohw").checked;
     var out = rows.filter(function (r) {
       if (fs && r.status !== fs) return false;
       if (isHa) {
         if (fp && r.prio !== fp) return false;
+        if (fsrc && r.source !== fsrc) return false;
         if (fc && r.category.split(" / ").indexOf(fc) < 0) return false;
         if (fd && !r.dup) return false;
         if (fh && !r.no_hardware) return false;
@@ -482,7 +498,7 @@ footer a { color: var(--muted); text-decoration: underline; }
       var x = sortValue(a, s[0]), y = sortValue(b, s[0]);
       if (x < y) return -s[1];
       if (x > y) return s[1];
-      return isHa ? a.n - b.n : norm(a.name) < norm(b.name) ? -1 : 1;
+      return isHa ? a.order - b.order : norm(a.name) < norm(b.name) ? -1 : 1;
     });
     if (s[0] === "usage") out.reverse();
     renderHead(isHa ? haColumns() : glColumns());
@@ -541,7 +557,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     state.sort[state.tab] = [th.dataset.sort, s[0] === th.dataset.sort ? -s[1] : 1];
     render();
   });
-  ["q", "f-status", "f-prio", "f-cat", "f-dup", "f-nohw"].forEach(function (id) {
+  ["q", "f-status", "f-prio", "f-cat", "f-src", "f-dup", "f-nohw"].forEach(function (id) {
     $(id).addEventListener("input", render);
   });
   $("lang").addEventListener("click", function () {

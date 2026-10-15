@@ -173,3 +173,27 @@
 351|William-De71/gladys-waste-collection-schedule|P
 353|guim31/gladys-traccar|E
 542|guim31/gladys-traccar|P
+212|guim31/gladys-f1|P
+285|guim31/gladys-colis|E
+251|guim31/gladys-nibe|E
+435|guim31/gladys-nibe|P
+829|guim31/gladys-qualite-eau|E
+141|guim31/gladys-tv-notify|E
+# Analyse forum de juillet (data/ha-forum-juillet.csv)
+F8|guim31/gladys-dlna|E
+F12|guim31/gladys-dlna|E
+F21|vincentBesseau/gladys-lg-webos|E
+F42|guim31/gladys-amazon-echo|E
+F55|William-De71/gladys-tapo|E
+F57|guim31/gladys-dreame|E
+F64|EchoPouet/gladys-enphase|E
+F70|prohand/gladys-daikin-cloud|E
+F71|prohand/gladys-proxmox|E
+F77|prohand/gladys-appledevicetracker|E
+F37|GladysAssistant/gladys-telegram|E
+F41|GladysAssistant/gladys-openweather|E
+F78|prohand/gladys-airquality|P
+F49|PhilippeMA/gladys-Meross|P
+F35|Terdious/gladys-tuya|P
+F80|guim31/gladys-tesla|P
+F69|callemand/gladys-melcloud-home|P
