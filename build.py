@@ -283,7 +283,7 @@ def ha_id(h):
 
 
 def auto_matches(ha, gladys):
-    """Same name on both sides, or a repository named after the Home Assistant integration id (gladys-bosch-shc for
+    """Same name on both sides (spaces aside), or a repository named after the Home Assistant integration id (gladys-bosch-shc for
     bosch_shc). Strict on purpose: a wrong match is worse than a missing one. Ids of a single word are left out,
     since they can mislead: Home Assistant's "fritzbox" is FRITZ!SmartHome, not the FRITZ!Box."""
     by_name, by_id = {}, {}
@@ -301,11 +301,15 @@ def auto_matches(ha, gladys):
     for n, nums in parts.items():
         if n not in by_name and len(nums) == 1:
             by_name[n] = nums
+    # Spaces do not tell names apart: "rtl_433" reads as "rtl 433", and gladys-rtl433 as "rtl433".
+    compact = {}
+    for n, nums in by_name.items():
+        compact.setdefault(n.replace(" ", ""), set()).update(nums)
     found = []
     for g in gladys.values():
         nums = set(by_id.get(repo_stem(g["repo"]), set()))
         for n in gladys_names(g):
-            nums |= by_name.get(n, set())
+            nums |= compact.get(n.replace(" ", ""), set())
         found.extend((num, g) for num in nums)
     return found
 
