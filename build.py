@@ -51,7 +51,9 @@ STORE_PAGE = "https://gladysassistant.com/fr/docs/integrations/external/"
 FORUM = "https://community.gladysassistant.com"
 FORUM_TOPIC = f"{FORUM}/t/10385"
 # How a developer claims an integration in the forum topic, and what ends the claim within the same sentence.
-CLAIM_WORDS = r"(je prends|je reprends|j ai lance le dev|je lance|je m occupe de|je pars sur|je me lance sur)"
+# "en cours" alone is not one: "appli en cours", "téléchargements en cours"…
+CLAIM_WORDS = (r"(je prends|je reprends|j ai lance le dev|je lance|encore en cours|en cours de dev|je m occupe de"
+               r"|je pars sur|je me lance sur)")
 CLAIM_STOPS = (r"(reste chez|restent chez|pris par|prise par|je n y touche pas|deja pris|deja fait|deja dans le store"
                r"|n est pas|sortie|sorties|est sortie)")
 # HA list names that also come up as everyday words in claims ("vu sous une vidéo YouTube", "vérifié sur GitHub").
