@@ -52,7 +52,7 @@ Toutes les 15 minutes, `build.py` relit tout, sans rien à tenir à jour à la m
 - les dépôts GitHub qui ont le topic `gladys-integration-wip`, même vides.
 
 Le rapprochement est automatique aussi : une intégration Gladys est reliée à l'idée de la liste qui porte le même nom
-(aux espaces près : « rtl433 » pour « rtl_433 »),
+(aux espaces près, « rtl433 » pour « rtl_433 », et sans le nom de domaine, « Healthchecks » pour « Healthchecks.io »),
 ou dont le nom de dépôt reprend l'identifiant de l'intégration Home Assistant (`gladys-bosch-shc` pour `bosch_shc`,
 quand cet identifiant fait au moins deux mots).
 Une idée nommée « A / B » compte aussi sous chacun de ses noms (« La Poste / Colissimo / Chronopost tracking » sous

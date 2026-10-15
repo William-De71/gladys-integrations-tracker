@@ -249,10 +249,18 @@ NAME_STOPWORDS = {"gladys", "integration", "integrations", "assistant", "externa
                   "de", "la", "le", "les", "et", "du", "des", "home", "ha"}
 
 
+def without_domain(name):
+    """Healthchecks.io → Healthchecks. Only when 6 letters or more are left: "Alarm.com" or "Fast.com" would leave
+    words too common to tell an integration apart."""
+    bare = re.sub(r"(?i)\.(io|com|net|org|fr|de|eu|app|dev|co)\b", "", name)
+    return bare if bare != name and len(norm(bare).replace(" ", "")) >= 6 else name
+
+
 def ha_names(h):
-    """Names an HA list entry goes by: as written, and without its parentheses."""
+    """Names an HA list entry goes by: as written, without its parentheses, and without a domain name."""
     name = h["Integration"]
-    return {n for n in (norm(name), norm(re.sub(r"\(.*?\)", "", name))) if len(n) >= 3}
+    bare = re.sub(r"\(.*?\)", "", name)
+    return {n for n in (norm(name), norm(bare), norm(without_domain(bare))) if len(n) >= 3}
 
 
 def ha_parts(h):
@@ -264,7 +272,7 @@ def ha_parts(h):
 def gladys_names(g):
     """Names a Gladys integration goes by: its name, each part of a "A / B" name, and its repository name."""
     name = re.sub(r"\(.*?\)", "", g["name"])
-    names = {norm(g["name"]), norm(name)}
+    names = {norm(g["name"]), norm(name), norm(without_domain(name))}
     names.update(norm(p) for p in re.split(r" / |, | & ", name))
     stem = re.sub(r"(?i)^gladys[-_]?|[-_]?gladys$|[-_]integration$|^integration[-_]", "", g["repo"].split("/")[1])
     names.add(norm(stem.replace("-", " ").replace("_", " ")))
