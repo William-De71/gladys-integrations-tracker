@@ -56,6 +56,8 @@ CLAIM_STOPS = (r"(reste chez|restent chez|pris par|prise par|je n y touche pas|d
                r"|n est pas|sortie|sorties|est sortie)")
 # HA list names that also come up as everyday words in claims ("vu sous une vidéo YouTube", "vérifié sur GitHub").
 CLAIM_IGNORED = {"youtube", "github"}
+# Without numbers, names are only read this far after "je prends": long posts go on with descriptions.
+CLAIM_WINDOW = 500
 # Status posts list ideas without claiming them.
 CLAIM_AUTHORS_IGNORED = {"pierre-gilles"}
 TOPIC = "gladys-assistant-integration"
@@ -359,13 +361,19 @@ def spaced(text):
 
 
 def forum_claims(ha):
-    """HA list number → the latest forum post claiming it: the text right after "je prends", up to the next claim
-    or to a phrase saying the idea belongs to someone else, and only HA names written in full."""
+    """HA list number → the latest forum post claiming it, read in the text after "je prends", up to the next claim
+    or to a phrase saying the idea belongs to someone else:
+      - numbers of the list written in the post ("Victron Energy GX (P1 n° 74)") are the most reliable: when a claim
+        has some, only they count, since its descriptions often name other ideas ("ça couvre Tasmota, BTHome…");
+      - otherwise HA names written in full, the longest one winning when they overlap ("Octopus Energy France"
+        rather than "Octopus Energy"). A shortened name ("Solcast" for "Solcast PV Forecast") is not read: first
+        words mislead too often ("Govee" for Govee Bluetooth, "Transport" for Transport for NSW); data/claims.txt
+        covers those."""
+    ids = {h["#"] for h in ha}
     names = []
     for h in ha:
-        for name in {spaced(h["Integration"]), spaced(re.sub(r"\(.*?\)", "", h["Integration"]))}:
-            if len(name.strip()) >= 4 and name.strip() not in CLAIM_IGNORED:
-                names.append((name, h["#"]))
+        full = {spaced(h["Integration"]), spaced(re.sub(r"\(.*?\)", "", h["Integration"]))}
+        names += [(name, h["#"]) for name in full if len(name.strip()) >= 4 and name.strip() not in CLAIM_IGNORED]
     claims = {}
     try:
         posts = forum_posts()
@@ -378,13 +386,20 @@ def forum_claims(ha):
         cooked = re.sub(r'<aside class="quote.*?</aside>', " ", p["cooked"], flags=re.S)
         text = spaced(html.unescape(re.sub(r"<[^>]+>", " ", cooked)))
         for m in re.finditer(CLAIM_WORDS, text):
-            part = text[m.end():m.end() + 500]
-            end = re.search(CLAIM_WORDS + "|" + CLAIM_STOPS, part)
-            part = " " + (part[:end.start()] if end else part) + " "
-            for name, num in names:
-                if name in part:
-                    claims[num] = dict(who=p["username"], date=p["created_at"][:10], post=p["post_number"],
-                                       url=f"{FORUM_TOPIC}/{p['post_number']}")
+            rest = text[m.end():]
+            end = re.search(CLAIM_WORDS + "|" + CLAIM_STOPS, rest)
+            part = " " + (rest[:end.start()] if end else rest) + " "
+            numbers = [n for n in re.findall(r" n (\d{1,4}) ", part) if n in ids]
+            if numbers:
+                found = set(numbers)
+            else:
+                part = part[:CLAIM_WINDOW]
+                hits = [(name, num) for name, num in names if name in part]
+                found = {num for name, num in hits
+                         if not any(name != other and name in other for other, _ in hits)}
+            for num in found:
+                claims[num] = dict(who=p["username"], date=p["created_at"][:10], post=p["post_number"],
+                                   url=f"{FORUM_TOPIC}/{p['post_number']}")
     return claims
 
 
@@ -432,6 +447,8 @@ def build():
         elif num in claims:
             row["status"] = CLAIMED
             row["claim"] = " — ".join(claims[num])
+            post = re.search(r"forum #(\d+)", claims[num][1])
+            row["claim_url"] = f"{FORUM_TOPIC}/{post.group(1)}" if post else ""
         elif num in announced and datetime.now(timezone.utc) - parse_date(announced[num]["date"] + "T00:00:00Z") \
                 <= INACTIVE_AFTER:
             # A claim without a repository after 30 days frees the idea again, like an inactive repository.

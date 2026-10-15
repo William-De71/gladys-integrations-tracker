@@ -79,11 +79,20 @@ qui correspondent à la même idée de la liste.
 « Hors liste » est normal pour beaucoup d'intégrations : la liste a retiré ce que Gladys couvrait déjà
 (Philips Hue, Sonos, Netatmo…), et certaines n'existent pas chez Home Assistant.
 
-Les annonces du [fil du forum](https://community.gladysassistant.com/t/10385) sont lues aussi : la page cherche
-les noms de la liste écrits en entier juste après « je prends » (ou « je m'occupe de », « je pars sur »…), jusqu'à la
-phrase suivante qui dit que l'idée appartient à quelqu'un d'autre (« reste chez », « pris par »…). Les messages de bilan
-de Pierre-Gilles et les citations sont ignorés. Chaque annonce renvoie vers son message, pour vérifier d'un clic, et
-s'efface d'elle-même au bout de 30 jours sans dépôt. Dès qu'un dépôt existe, c'est lui qui fait foi.
+Les annonces du [fil du forum](https://community.gladysassistant.com/t/10385) sont lues aussi, dans le texte qui
+suit « je prends » (ou « je m'occupe de », « je pars sur »…), jusqu'à la phrase suivante qui dit que l'idée appartient
+à quelqu'un d'autre (« reste chez », « pris par »…) :
+- les **numéros de la liste** cités (« Victron Energy GX (P1 n° 74) ») sont le signal le plus sûr : quand une annonce
+  en contient, seuls eux comptent, car ses descriptions citent souvent d'autres idées (« ça couvre Tasmota,
+  BTHome… ») ;
+- sinon, les noms de la liste écrits en entier, le plus long l'emportant quand deux se recouvrent (« Octopus Energy
+  France » plutôt qu'« Octopus Energy »). Un nom raccourci (« Solcast » pour « Solcast PV Forecast ») n'est pas lu :
+  `data/claims.txt` rattrape ces cas.
+
+**Astuce pour réserver : citez le numéro de la liste**, comme « Solcast PV Forecast (n° 41) ».
+
+Les messages de bilan de Pierre-Gilles et les citations sont ignorés. Chaque annonce renvoie vers son message, pour
+vérifier d'un clic, et s'efface d'elle-même au bout de 30 jours sans dépôt. Dès qu'un dépôt existe, c'est lui qui fait foi.
 
 ### Corrections facultatives
 
