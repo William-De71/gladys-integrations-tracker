@@ -9,13 +9,14 @@ Everything is found again on every run, with nothing to maintain by hand:
   - GitHub repositories named "gladys…" that contain a gladys-assistant-integration.json manifest
     (every repository created from the integration template has one), or that have the
     gladys-integration-wip topic: integrations in progress, which the store ignores;
-  - archived or deleted repositories, checked on GitHub itself (the store index can lag behind);
+  - archived, deprecated (description starting with "Deprecated") or deleted repositories, checked on GitHub itself
+    (the store index can lag behind);
   - claims posted in the forum topic ("je prends X"), until a repository shows up;
   - HA list ↔ Gladys matches: integrations whose names are the same are matched automatically.
 
 Optional corrections, never required:
   - data/mapping.txt: HA list number | repository | E (equivalent), P (partial) or - (wrong automatic match);
-  - data/claims.txt: claims the forum reading misses;
+  - data/claims.txt: claims the forum reading misses, or ideas freed again ("-" as the claimant);
   - data/extra-repos.txt: Gladys repositories the searches cannot find.
 
 Output, in site/: data.json (read by index.html), one CSV per table, and an .xlsx workbook.
@@ -84,7 +85,7 @@ STATUS_FR = {
     CLAIMED: "Annoncée sur le forum",
     FREE: "Libre",
     NATIVE: "Native Gladys",
-    ARCHIVED: "Archivée ou supprimée",
+    ARCHIVED: "Archivée, dépréciée ou supprimée",
 }
 RANK = [STORE, TOPIC_ONLY, NO_TOPIC, INACTIVE, ARCHIVED]
 # A repository outside the store with no commit for this long is no longer "in progress".
@@ -243,13 +244,17 @@ def covers(g):
     return g["status"] != ARCHIVED and not (g["status"] == INACTIVE and g.get("template"))
 
 
+# A repository its author deprecated without archiving it says so at the start of its description.
+DEPRECATED = re.compile(r"\s*(deprecated|obsol[eè]te|d[ée]pr[ée]ci[ée]e?)\b", re.I)
+
+
 def archived_or_gone(names):
-    """Repositories archived or deleted on GitHub, as lowercase owner/name keys."""
+    """Repositories archived, deprecated or deleted on GitHub, as lowercase owner/name keys."""
     found = set()
     for start in range(0, len(names), 50):
         chunk = names[start:start + 50]
         fields = " ".join(
-            f'r{i}: repository(owner: {json.dumps(n.split("/")[0])}, name: {json.dumps(n.split("/")[1])}) {{ isArchived }}'
+            f'r{i}: repository(owner: {json.dumps(n.split("/")[0])}, name: {json.dumps(n.split("/")[1])}) {{ isArchived description }}'
             for i, n in enumerate(chunk))
         # A deleted repository makes GraphQL answer with an error next to the data: read the data anyway.
         result = subprocess.run(["gh", "api", "graphql", "-f", f"query={{ {fields} }}"],
@@ -260,7 +265,7 @@ def archived_or_gone(names):
             raise RuntimeError(f"gh api graphql: {result.stderr.strip()}")
         for i, n in enumerate(chunk):
             repo = data.get(f"r{i}")
-            if repo is None or repo["isArchived"]:
+            if repo is None or repo["isArchived"] or DEPRECATED.match(repo["description"] or ""):
                 found.add(n.lower())
     return found
 
@@ -429,6 +434,8 @@ def build():
         if (num, g["repo"]) not in rejected and all(x is not g for x, _ in mapping.get(num, [])):
             mapping.setdefault(num, []).append((g, "A"))
     claims = {num: (who, src) for num, who, src in read_table(DATA / "claims.txt")}
+    # "-" frees an idea whose claim was given up: forum posts and the gist status no longer count for it.
+    freed = {num for num, (who, _) in claims.items() if who == "-"}
     announced = forum_claims(ha)
     try:
         post_dates = {p["post_number"]: p["created_at"][:10] for p in forum_posts()}
@@ -457,6 +464,8 @@ def build():
             row["quality"] = matches[0][1]
         elif h["_native"]:
             row["status"] = NATIVE
+        elif num in freed:
+            pass
         elif num in claims:
             row["status"] = CLAIMED
             who, src = claims[num]
@@ -576,7 +585,7 @@ def write_xlsx(data, tables, path):
         [STATUS_FR[NO_TOPIC], f"dépôt créé depuis le template, ou avec le topic {WIP_TOPIC} : en développement"],
         [STATUS_FR[INACTIVE], "dépôt hors store sans commit depuis plus de 30 jours ; une copie du template jamais "
                               "remplie ne compte plus pour l'idée"],
-        [STATUS_FR[ARCHIVED], "dépôt archivé ou supprimé : ne compte plus pour l'idée"],
+        [STATUS_FR[ARCHIVED], "dépôt archivé, déprécié ou supprimé : ne compte plus pour l'idée"],
         [STATUS_FR[CLAIMED], "« je prends … » sur le fil du forum, sans dépôt pour l'instant ; l'annonce expire au bout de 30 jours"],
         [STATUS_FR[FREE], "personne dessus à notre connaissance"],
         [],

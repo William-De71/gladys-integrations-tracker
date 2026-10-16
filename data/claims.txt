@@ -1,7 +1,8 @@
 # Annonces du forum sans dépôt (facultatif). Format : N° dans la liste HA | qui | source
-2|En pause (abandonnée le 9 oct.)|forum #32
-41|lmilcent|forum #78
-52|lmilcent|forum #78
-309|guim31|forum #186
+# « - » à la place de qui : idée libérée (abandonnée par son auteur), les annonces du forum ne comptent plus.
+2|-|abandonnée par son auteur
+28|-|abandonnée par son auteur
+52|-|abandonnée par son auteur
+102|-|annonce de GBoulvin réalisée en DSMR Smart Meter (n° 91)
+110|-|dépréciée : Gladys gère la découverte MQTT dans son cœur depuis la 4.86
 323|guim31|forum #186
-356|guim31|forum #186

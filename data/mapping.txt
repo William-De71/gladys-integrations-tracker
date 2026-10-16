@@ -38,6 +38,7 @@
 38|guim31/gladys-vesync|E
 39|guim31/gladys-philips-tv|E
 40|LM1LC3N7/gladys-tibber|E
+41|LM1LC3N7/gladys-solcast|E
 42|guim31/gladys-miele|E
 44|guim31/gladys-ics-calendar|E
 45|guim31/gladys-switchbot|E
@@ -198,3 +199,11 @@ F35|Terdious/gladys-tuya|P
 F80|guim31/gladys-tesla|P
 F69|callemand/gladys-melcloud-home|P
 157|gboulvin/Gladys-Huawei-Solar|E
+183|LM1LC3N7/gladys-eufy-clean|E
+189|guim31/gladys-tempest|E
+255|LM1LC3N7/gladys-hue-sync-box|E
+309|guim31/gladys-nintendo-parental|E
+310|LM1LC3N7/gladys-ajax|E
+327|guim31/gladys-homematic-ccu|E
+356|guim31/gladys-ipma|E
+420|LM1LC3N7/gladys-wmbusmeters|E

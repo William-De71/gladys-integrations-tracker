@@ -48,7 +48,7 @@ l'analyse de juillet a sa propre tuile.
 | Topic store posé, pas encore indexée | dépôt avec le topic du store, pas encore indexé (ou refusé par l'indexeur) |
 | En cours (dépôt GitHub) | dépôt créé depuis le template, ou avec le topic `gladys-integration-wip` |
 | Hors store, inactive | dépôt hors store sans commit depuis plus de 30 jours : l'intégration existe et compte pour l'idée, sauf si c'est une copie du template jamais remplie |
-| Archivée ou supprimée | dépôt archivé ou supprimé sur GitHub, même si le store le liste encore : ne compte plus pour l'idée |
+| Archivée, dépréciée ou supprimée | dépôt archivé ou supprimé sur GitHub, ou dont la description commence par « Deprecated » (ou « Obsolète », « Déprécié »), même si le store le liste encore : ne compte plus pour l'idée |
 | Annoncée sur le forum | « je prends … » sur le [fil du forum](https://community.gladysassistant.com/t/10385), sans dépôt pour l'instant ; l'annonce expire au bout de 30 jours |
 | Libre | personne dessus à notre connaissance |
 
@@ -101,7 +101,7 @@ Rien n'est obligatoire, mais trois fichiers de `data/` permettent d'affiner :
 | Fichier | Usage | Format |
 |---|---|---|
 | `mapping.txt` | relier une idée (n° de la liste ou F de l'analyse de juillet) et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° HA \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
-| `claims.txt` | signaler une annonce que la lecture du forum a manquée | `N° HA \| qui \| source` |
+| `claims.txt` | signaler une annonce que la lecture du forum a manquée, ou libérer une idée abandonnée par son auteur (`-` à la place de qui : les annonces du forum et le statut du gist ne comptent plus) | `N° HA \| qui \| source` |
 | `extra-repos.txt` | ajouter un dépôt que les recherches ne trouvent pas | `propriétaire/dépôt` |
 
 Un push sur ces fichiers relance la page tout de suite, sans attendre la mise à jour suivante.
