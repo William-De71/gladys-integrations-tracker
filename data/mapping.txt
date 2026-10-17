@@ -238,3 +238,7 @@ F69|callemand/gladys-melcloud-home|P
 744|guim31/gladys-powerfox|P
 747|prohand/gladys-prixcarburants|P
 1164|William-De71/gladys-ginko|E
+643|guim31/gladys-redfish|E
+717|guim31/gladys-redfish|E
+225|guim31/gladys-airthings|P
+650|guim31/gladys-growatt|P
