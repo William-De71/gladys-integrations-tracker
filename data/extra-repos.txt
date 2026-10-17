@@ -13,7 +13,6 @@ gboulvin/Gladys-Plex
 quentinlegay/gladys-grafana
 quentinlegay/gladys-nba
 quentinlegay/gladys-sport-games
-b3n0/gladys-yoto
 b3n0/gladys-freebox-player
 thomasastier/gladys-deye-cloud
 cocofil/gladys-memos-integration
