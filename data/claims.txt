@@ -5,3 +5,4 @@
 52|-|abandonnée par son auteur
 102|-|annonce de GBoulvin réalisée en DSMR Smart Meter (n° 91)
 110|-|dépréciée : Gladys gère la découverte MQTT dans son cœur depuis la 4.86
+F39|-|go2rtc (annonce #224) ne couvre pas WebRTC Camera
