@@ -225,3 +225,15 @@ F69|callemand/gladys-melcloud-home|P
 850|guim31/gladys-beszel|E
 881|guim31/gladys-ista|P
 1181|guim31/gladys-emsc|E
+187|LM1LC3N7/gladys-rss|E
+257|LM1LC3N7/gladys-sleepiq|E
+284|LM1LC3N7/gladys-leviton|E
+299|LM1LC3N7/gladys-entsoe|E
+303|LM1LC3N7/gladys-airvisual|E
+316|LM1LC3N7/gladys-toyota|E
+340|guim31/gladys-powerfox|E
+344|LM1LC3N7/gladys-nexia|E
+350|LM1LC3N7/gladys-elegoo|E
+378|LM1LC3N7/gladys-incomfort|E
+744|guim31/gladys-powerfox|P
+747|prohand/gladys-prixcarburants|P
