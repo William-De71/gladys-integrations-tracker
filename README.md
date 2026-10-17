@@ -82,7 +82,7 @@ qui correspondent à la même idée de la liste.
 Les annonces du [fil du forum](https://community.gladysassistant.com/t/10385) sont lues aussi, dans le texte qui
 suit « je prends » (ou « je m'occupe de », « je pars sur »…), jusqu'à la phrase suivante qui dit que l'idée appartient
 à quelqu'un d'autre (« reste chez », « pris par »…) :
-- les **numéros de la liste** cités (« Victron Energy GX (P1 n° 74) ») sont le signal le plus sûr : quand une annonce
+- les **numéros de la liste** cités (« Victron Energy GX (P1 n° 74) », ou « n° F39 » pour l'analyse de juillet) sont le signal le plus sûr : quand une annonce
   en contient, seuls eux comptent, car ses descriptions citent souvent d'autres idées (« ça couvre Tasmota,
   BTHome… ») ;
 - sinon, les noms de la liste écrits en entier, le plus long l'emportant quand deux se recouvrent (« Octopus Energy

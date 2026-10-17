@@ -242,3 +242,6 @@ F69|callemand/gladys-melcloud-home|P
 717|guim31/gladys-redfish|E
 225|guim31/gladys-airthings|P
 650|guim31/gladys-growatt|P
+1171|guim31/gladys-qualite-eau|E
+168|LM1LC3N7/gladys-ambient-weather|E
+921|LM1LC3N7/gladys-airvisual|P
