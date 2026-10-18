@@ -1,0 +1,3 @@
+# Avertissements affichés sous une intégration Home Assistant (facultatif).
+# Format : N° dans la liste HA | texte en français | texte en anglais
+514|API OpenSky : ses conditions d'utilisation exigent un accord écrit d'OpenSky pour tout usage automatisé, même personnel ou non lucratif (une intégration domotique en est un). Sans accord, préférer adsb.lol, adsb.fi ou un récepteur ADS-B local, comme Aircraft overhead.|OpenSky API: its terms of use require a written agreement from OpenSky for any automated use, even personal or non-profit (a home automation integration is one). Without one, prefer adsb.lol, adsb.fi or a local ADS-B receiver, like Aircraft overhead.

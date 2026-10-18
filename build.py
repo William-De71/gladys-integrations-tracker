@@ -17,6 +17,7 @@ Everything is found again on every run, with nothing to maintain by hand:
 Optional corrections, never required:
   - data/mapping.txt: HA list number | repository | E (equivalent), P (partial) or - (wrong automatic match);
   - data/claims.txt: claims the forum reading misses, or ideas freed again ("-" as the claimant);
+  - data/notes.txt: warnings shown under an idea (terms of use...), in French and English;
   - data/extra-repos.txt: Gladys repositories the searches cannot find.
 
 Output, in site/: data.json (read by index.html), one CSV per table, and an .xlsx workbook.
@@ -436,6 +437,8 @@ def build():
     claims = {num: (who, src) for num, who, src in read_table(DATA / "claims.txt")}
     # "-" frees an idea whose claim was given up: forum posts and the gist status no longer count for it.
     freed = {num for num, (who, _) in claims.items() if who == "-"}
+    # Warnings shown under an idea (terms of use, access restrictions), in French and English.
+    notes = {num: dict(fr=fr, en=en) for num, fr, en in read_table(DATA / "notes.txt")}
     announced = forum_claims(ha)
     try:
         post_dates = {p["post_number"]: p["created_at"][:10] for p in forum_posts()}
@@ -458,6 +461,7 @@ def build():
             matches=[dict(repo=g["repo"], quality=q) for g, q in matches],
             # Several full matches for one idea; a partial match only complements the others.
             dup=sum(1 for _, q in matches if q != "P") > 1,
+            warning=notes.get(num),
         )
         if matches:
             row["status"] = matches[0][0]["status"]
@@ -535,7 +539,8 @@ def flat_tables(data):
             f"https://github.com/{first['repo']}" if first else "",
             first["cover"] if first else "", first["version"] if first else "",
             f"oui ({len(h['matches'])})" if h["dup"] else "",
-            ", ".join(others) or h["claim"], h["desc"],
+            "; ".join(x for x in (", ".join(others) or h["claim"], (h.get("warning") or {}).get("fr", "")) if x),
+            h["desc"],
             "Liste de Pierre-Gilles" if h["source"] == "list" else f"Analyse forum de juillet ({h['note']})",
         ])
     head_g = ["Intégration Gladys", "Auteur", "Dépôt GitHub", "Cover", "Statut", "Type", "Version",
