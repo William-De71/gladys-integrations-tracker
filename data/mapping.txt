@@ -248,3 +248,15 @@ F69|callemand/gladys-melcloud-home|P
 1171|guim31/gladys-qualite-eau|E
 168|LM1LC3N7/gladys-ambient-weather|E
 921|LM1LC3N7/gladys-airvisual|P
+52|LM1LC3N7/gladys-waze-travel-time|-
+423|LM1LC3N7/gladys-nest-protect|E
+467|guim31/gladys-ssh|P
+486|LM1LC3N7/gladys-stiebel-eltron|E
+558|LM1LC3N7/gladys-zehnder-comfoair|E
+635|LM1LC3N7/gladys-keba|E
+710|LM1LC3N7/gladys-librelinkup|E
+783|LM1LC3N7/gladys-oekofen|E
+794|LM1LC3N7/gladys-edilkamin|E
+795|LM1LC3N7/gladys-swiss-hydro|E
+1095|LM1LC3N7/gladys-comelit|E
+426|PhilippeMA/Gladys-volkswagen|P

@@ -404,7 +404,8 @@ def forum_claims(ha):
             end = re.search(CLAIM_WORDS + "|" + CLAIM_STOPS, rest)
             part = " " + (rest[:end.start()] if end else rest) + " "
             # "n° 74", "n°74" ("°" is dropped, not spaced), "nº 74", and the July analysis entries: "n° F39".
-            numbers = [n.upper() for n in re.findall(r" no? ?(f?\d{1,4}) ", part) if n.upper() in ids]
+            # "au n° 122", "du n° 241" point to a forum post, not to the list.
+            numbers = [n.upper() for n in re.findall(r"(?<! au)(?<! du) no? ?(f?\d{1,4}) ", part) if n.upper() in ids]
             if numbers:
                 found = set(numbers)
             else:

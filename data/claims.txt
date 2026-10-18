@@ -2,7 +2,8 @@
 # « - » à la place de qui : idée libérée (abandonnée par son auteur), les annonces du forum ne comptent plus.
 2|cœur de Gladys|développée directement dans le cœur de Gladys, pas en intégration externe
 28|-|abandonnée par son auteur
-52|-|abandonnée par son auteur
+52|-|abandonnée par lmilcent (forum #279) : Waze n'a pas d'API publique
 102|-|annonce de GBoulvin réalisée en DSMR Smart Meter (n° 91)
 110|-|dépréciée : Gladys gère la découverte MQTT dans son cœur depuis la 4.86
 F39|-|go2rtc (annonce #224) ne couvre pas WebRTC Camera
+1156|Will_71|forum #281, ajoutée à l'intégration Météo France
