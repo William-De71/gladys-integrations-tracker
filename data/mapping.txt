@@ -83,6 +83,7 @@
 95|guim31/gladys-renault|E
 96|PhilippeMA/gladys-Vaillant-SaunierDuval|P
 98|prohand/gladys-verisure|E
+364|prohand/gladys-verisure|E
 99|guim31/gladys-stellantis|E
 100|valentinhttr/gladys-meteoswiss|E
 101|thomasissa-png/gladys-calendrier-tempo|P
@@ -137,6 +138,7 @@
 392|prohand/gladys-ecoledirecte|E
 393|LM1LC3N7/gladys-sncb|E
 396|William-De71/gladys-flipr|E
+387|guim31/gladys-eau|E
 400|daviddu26/gladys-tbm|E
 406|guim31/gladys-holidays|P
 414|guim31/gladys-laposte|E
