@@ -3,7 +3,6 @@ LM1LC3N7/gladys-lutron
 cicoub13/gladys-ecowitt
 prohand/gladys-teleinfo
 bertrandda/gladys-viessmann
-jeanbruder/gladys-viessmann-integration
 RouXx67/gladys-tado-integration
 prohand/gladys-gazdebordeaux
 prohand/gladys-ultenic

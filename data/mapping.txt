@@ -74,7 +74,6 @@
 81|guim31/gladys-uptime-kuma|E
 82|guim31/gladys-nanoleaf|E
 85|bertrandda/gladys-viessmann|E
-85|jeanbruder/gladys-viessmann-integration|E
 86|guim31/gladys-anker-solix|E
 87|LM1LC3N7/gladys-blitzortung|E
 89|guim31/gladys-linkplay|E
@@ -248,7 +247,6 @@ F69|callemand/gladys-melcloud-home|P
 1171|guim31/gladys-qualite-eau|E
 168|LM1LC3N7/gladys-ambient-weather|E
 921|LM1LC3N7/gladys-airvisual|P
-52|LM1LC3N7/gladys-waze-travel-time|-
 423|LM1LC3N7/gladys-nest-protect|E
 467|guim31/gladys-ssh|P
 486|LM1LC3N7/gladys-stiebel-eltron|E
