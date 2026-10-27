@@ -261,3 +261,8 @@ F69|callemand/gladys-melcloud-home|P
 1095|LM1LC3N7/gladys-comelit|E
 426|PhilippeMA/Gladys-volkswagen|P
 127|William-De71/gladys-amcrest-dahua|P
+497|LM1LC3N7/gladys-peblar|E
+563|guim31/gladys-geofeeds|E
+634|LM1LC3N7/gladys-oura|E
+732|LM1LC3N7/gladys-weatherlink|E
+778|guim31/gladys-launch-library|E
