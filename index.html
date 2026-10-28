@@ -180,6 +180,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     <select id="f-prio" aria-label="Priorité"></select>
     <select id="f-cat" aria-label="Catégorie"></select>
     <select id="f-src" aria-label="Source"></select>
+    <select id="f-bt" aria-label="Bluetooth"></select>
     <label><input type="checkbox" id="f-dup"> <span data-i18n="dupOnly">Doublons seulement</span></label>
     <label id="nohw-wrap"><input type="checkbox" id="f-nohw"> <span data-i18n="noHw">Sans matériel</span></label>
     <span class="count" id="count"></span>
@@ -210,6 +211,7 @@ footer a { color: var(--muted); text-decoration: underline; }
       howto3: "Annonce-la sur le <a href=\"https://community.gladysassistant.com/t/10385\">fil du forum</a>. Tout le reste est automatique.",
       tabHa: "Liste Home Assistant", tabGl: "Intégrations Gladys",
       search: "Rechercher (nom, marque, auteur, dépôt…)", dupOnly: "Doublons seulement", noHw: "Sans matériel",
+      allBt: "Bluetooth ou non", btHide: "Sans Bluetooth", btOnly: "Bluetooth seulement",
       loading: "Chargement…", nothing: "Aucun résultat.", loadError: "Impossible de charger data.json.",
       allStatus: "Tous les statuts", allPrio: "Toutes priorités", allCat: "Toutes catégories",
       statIdeas: "idées dans la liste", statTaken: "déjà prises ou faites",
@@ -248,6 +250,7 @@ footer a { color: var(--muted); text-decoration: underline; }
       howto3: "Announce it in the <a href=\"https://community.gladysassistant.com/t/10385\">forum topic</a>. Everything else is automatic.",
       tabHa: "Home Assistant list", tabGl: "Gladys integrations",
       search: "Search (name, brand, author, repository…)", dupOnly: "Duplicates only", noHw: "No hardware",
+      allBt: "Bluetooth or not", btHide: "Without Bluetooth", btOnly: "Bluetooth only",
       loading: "Loading…", nothing: "No results.", loadError: "Could not load data.json.",
       allStatus: "All statuses", allPrio: "All priorities", allCat: "All categories",
       statIdeas: "ideas in the list", statTaken: "already taken or done",
@@ -349,9 +352,11 @@ footer a { color: var(--muted); text-decoration: underline; }
     $("f-cat").classList.toggle("hidden", !isHa);
     $("f-src").classList.toggle("hidden", !isHa);
     $("nohw-wrap").classList.toggle("hidden", !isHa);
+    $("f-bt").classList.toggle("hidden", !isHa);
     if (!data) return;
     fillSelect($("f-prio"), t("allPrio"), ["P1", "P2", "P3", "P4"]);
     fillSelect($("f-src"), t("allSrc"), ["list", "forum"], [t("srcListShort"), t("srcForumShort")]);
+    fillSelect($("f-bt"), t("allBt"), ["hide", "only"], [t("btHide"), t("btOnly")]);
     var cats = {};
     data.ha.forEach(function (h) { h.category.split(" / ").forEach(function (c) { cats[c] = 1; }); });
     fillSelect($("f-cat"), t("allCat"), Object.keys(cats).sort());
@@ -477,7 +482,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     var isHa = state.tab === "ha";
     var rows = isHa ? data.ha : data.gladys;
     var q = norm($("q").value.trim());
-    var fsrc = $("f-src").value;
+    var fsrc = $("f-src").value, fbt = $("f-bt").value;
     var fs = $("f-status").value, fp = $("f-prio").value, fc = $("f-cat").value;
     var fd = $("f-dup").checked, fh = $("f-nohw").checked;
     var out = rows.filter(function (r) {
@@ -485,6 +490,7 @@ footer a { color: var(--muted); text-decoration: underline; }
       if (isHa) {
         if (fp && r.prio !== fp) return false;
         if (fsrc && r.source !== fsrc) return false;
+        if (fbt && r.bluetooth !== (fbt === "only")) return false;
         if (fc && r.category.split(" / ").indexOf(fc) < 0) return false;
         if (fd && !r.dup) return false;
         if (fh && !r.no_hardware) return false;
@@ -559,7 +565,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     state.sort[state.tab] = [th.dataset.sort, s[0] === th.dataset.sort ? -s[1] : 1];
     render();
   });
-  ["q", "f-status", "f-prio", "f-cat", "f-src", "f-dup", "f-nohw"].forEach(function (id) {
+  ["q", "f-status", "f-prio", "f-cat", "f-src", "f-bt", "f-dup", "f-nohw"].forEach(function (id) {
     $(id).addEventListener("input", render);
   });
   $("lang").addEventListener("click", function () {

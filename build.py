@@ -92,6 +92,7 @@ RANK = [STORE, TOPIC_ONLY, NO_TOPIC, INACTIVE, ARCHIVED]
 # A repository outside the store with no commit for this long is no longer "in progress".
 INACTIVE_AFTER = timedelta(days=30)
 QUALITY_FR = {"E": "Équivalente", "P": "Partielle", "A": "Automatique (même nom)"}
+BLUETOOTH = re.compile(r"bluetooth|\bBLE\b", re.I)
 
 
 def fetch(url):
@@ -440,6 +441,7 @@ def build():
     freed = {num for num, (who, _) in claims.items() if who == "-"}
     # Warnings shown under an idea (terms of use, access restrictions), in French and English.
     notes = {num: dict(fr=fr, en=en) for num, fr, en in read_table(DATA / "notes.txt")}
+    bluetooth = {num: answer == "oui" for num, answer in read_table(DATA / "bluetooth.txt")}
     announced = forum_claims(ha)
     try:
         post_dates = {p["post_number"]: p["created_at"][:10] for p in forum_posts()}
@@ -458,6 +460,8 @@ def build():
             prio=h["Priority"], name=h["Integration"], category=h["Category"],
             usage=h["HA usage (% of installations)"], access=h["Access"],
             no_hardware=h["No hardware needed"] == "yes", area=h["Area"], link=h["Reference link"],
+            # Needs a Bluetooth adapter next to Gladys; data/bluetooth.txt corrects the guess.
+            bluetooth=bluetooth.get(num, bool(BLUETOOTH.search(h["Integration"] + " " + h["Description"]))),
             desc=h["Description"], status=FREE, quality="", claim="", claim_url="",
             matches=[dict(repo=g["repo"], quality=q) for g, q in matches],
             # Several full matches for one idea; a partial match only complements the others.

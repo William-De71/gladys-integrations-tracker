@@ -103,6 +103,7 @@ Rien n'est obligatoire, mais trois fichiers de `data/` permettent d'affiner :
 | `mapping.txt` | relier une idée (n° de la liste ou F de l'analyse de juillet) et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° HA \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
 | `claims.txt` | signaler une annonce que la lecture du forum a manquée, ou libérer une idée abandonnée par son auteur (`-` à la place de qui : les annonces du forum et le statut du gist ne comptent plus) | `N° HA \| qui \| source` |
 | `notes.txt` | afficher un avertissement sous une idée (conditions d'utilisation, accès restreint), en français et en anglais | `N° HA \| texte FR \| texte EN` |
+| `bluetooth.txt` | corriger le repérage des idées Bluetooth (automatique : « Bluetooth » ou « BLE » dans le nom ou la description), utilisé par le filtre Bluetooth | `N° HA \| oui ou non` |
 | `extra-repos.txt` | ajouter un dépôt que les recherches ne trouvent pas | `propriétaire/dépôt` |
 
 Un push sur ces fichiers relance la page tout de suite, sans attendre la mise à jour suivante.
