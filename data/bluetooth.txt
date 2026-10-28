@@ -1,9 +1,5 @@
 # Corrections du repérage Bluetooth (automatique : « Bluetooth » ou « BLE » dans le nom ou la description).
-# Format : N° dans la liste HA | oui (Bluetooth) ou non (passe par une passerelle réseau ou un cloud, ou Bluetooth facultatif)
+# Format : N° dans la liste HA | oui (Bluetooth) ou non (Bluetooth seulement pour une partie des appareils, à côté du Wi-Fi ou du Zigbee)
 18|non
-146|non
-159|non
 181|non
 519|non
-826|non
-958|non
