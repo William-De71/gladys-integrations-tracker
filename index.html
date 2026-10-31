@@ -526,8 +526,8 @@ footer a { color: var(--muted); text-decoration: underline; }
         a("integrations-gladys.csv", t("csvGl"))].join(" · ");
   }
 
-  // The page is rebuilt every 15 minutes: past 45, something is stuck and a manual update is worth it.
-  var LATE_AFTER_MINUTES = 45;
+  // The page is rebuilt every 30 minutes: past 75, something is stuck and a manual update is worth it.
+  var LATE_AFTER_MINUTES = 75;
   function renderUpdated() {
     if (!data) return;
     var minutes = Math.max(0, Math.floor((Date.now() - new Date(data.generated_at).getTime()) / 60000));

@@ -7,7 +7,7 @@ on:
   schedule:
     # Off the round minutes, which GitHub delays or skips the most when it is busy. GitHub fires it only a few times a
     # day on this repository: it is a fallback that restarts the chain kept up by the "next" job below.
-    - cron: "7,22,37,52 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
@@ -62,7 +62,7 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v5
 
-  # The schedule cannot be relied on, so every run starts the next one 15 minutes later. A run that finds another
+  # The schedule cannot be relied on, so every run starts the next one 30 minutes later. A run that finds another
   # one already queued or running stops there, so that pushes, manual runs and the schedule never pile up chains.
   # Dispatching with GITHUB_TOKEN is allowed: workflow_dispatch is an exception to the rule that its events start no
   # workflow.
@@ -70,9 +70,9 @@ jobs:
     needs: deploy
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
-      - run: sleep 840
+      - run: sleep 1740
       - name: Start the next run
         run: |
           others=$(gh run list --repo "$REPO" --workflow build.yml --limit 20 --json databaseId,status \
