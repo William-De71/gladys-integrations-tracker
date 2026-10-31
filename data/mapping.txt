@@ -302,6 +302,10 @@ F69|callemand/gladys-melcloud-home|P
 941|guim31/gladys-lifx|P
 706|guim31/gladys-hamqsl|E
 637|guim31/gladys-tfl|E
+761|guim31/gladys-fmi|E
+703|LM1LC3N7/gladys-ta-cmi|E
+875|guim31/gladys-torrent|E
+905|LM1LC3N7/gladys-libre-hardware-monitor|P
 # Correspondances automatiques fausses : le routeur TP-Link n'est pas Kasa / Tapo, Speedtest ne met pas à jour le DNS Cloudflare.
 F20|William-De71/gladys-tplink-router|-
 166|guim31/gladys-speedtest|-
