@@ -318,3 +318,5 @@ F20|William-De71/gladys-tplink-router|-
 1147|William-De71/gladys-minut|E
 1156|William-De71/gladys-meteo-france|E
 1156|guim31/gladys-avalanche|E
+# Waze abandonné par lmilcent (forum #279) : son dépôt sans topic ne couvre plus l'idée.
+52|LM1LC3N7/gladys-waze-travel-time|-
