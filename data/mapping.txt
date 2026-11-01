@@ -313,3 +313,8 @@ F69|callemand/gladys-melcloud-home|P
 # Correspondances automatiques fausses : le routeur TP-Link n'est pas Kasa / Tapo, Speedtest ne met pas à jour le DNS Cloudflare.
 F20|William-De71/gladys-tplink-router|-
 166|guim31/gladys-speedtest|-
+# Noms Gladys plus courts que le nom HA, et bulletins d'avalanche (ajoutés à Météo France, et par guim31).
+718|William-De71/gladys-divoom-pixoo|E
+1147|William-De71/gladys-minut|E
+1156|William-De71/gladys-meteo-france|E
+1156|guim31/gladys-avalanche|E

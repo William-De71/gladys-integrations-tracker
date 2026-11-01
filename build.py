@@ -30,10 +30,11 @@ import shutil
 import subprocess
 import re
 import sys
+import time
 import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from functools import cache
 from pathlib import Path
 
@@ -70,7 +71,11 @@ TOPIC = "gladys-assistant-integration"
 WIP_TOPIC = "gladys-integration-wip"
 MANIFEST = "gladys-assistant-integration.json"
 # External integrations started in summer 2026: older "gladys" repositories are Gladys 4 modules.
-NAME_SEARCH = "gladys in:name fork:false created:>2026-06-01"
+NAME_SEARCH = "gladys in:name fork:false"
+NAME_SEARCH_START = date(2026, 6, 1)
+# Searches are cut into creation date ranges from here on, each under the 1000 results GitHub returns at most.
+SEARCH_START = date(2008, 1, 1)
+SEARCH_CAP = 1000
 USER_AGENT = "gladys-integrations-tracker"
 # Where to start an update by hand: Actions tab → "Run workflow" (needs write access to the repository).
 WORKFLOW_PAGE = "https://github.com/William-De71/gladys-integrations-tracker/actions/workflows/build.yml"
@@ -167,9 +172,35 @@ def readable(repo_name):
     return " ".join(w[:1].upper() + w[1:] for w in re.split(r"[-_]+", stem))
 
 
-def search_repos(query):
-    out = gh_api("-X", "GET", "search/repositories", "-f", f"q={query}", "-f", "per_page=100",
-                 "--paginate", "--jq", ".items[]")
+def gh_search(*args):
+    """gh api on the search endpoint, which allows ~30 requests a minute: wait and retry when the quota runs out."""
+    for attempt in range(4):
+        try:
+            return gh_api("-X", "GET", "search/repositories", *args)
+        except RuntimeError as e:
+            if attempt == 3 or not re.search(r"rate limit|HTTP 403|HTTP 429", str(e), re.I):
+                raise
+            time.sleep(61)
+
+
+def search_repos(query, start=SEARCH_START, end=None):
+    """Every repository matching the query. GitHub search never returns more than 1000 results (the topic alone
+    went past 1000 on 2026-11-01, and the store index lost the last ones): ranges of creation dates holding more
+    are cut in half until each one fits."""
+    end = end or datetime.now(timezone.utc).date()
+    ranged = f"{query} created:{start.isoformat()}..{end.isoformat()}"
+    total = int(gh_search("-f", f"q={ranged}", "-f", "per_page=1", "--jq", ".total_count").strip())
+    if total > SEARCH_CAP and start < end:
+        middle = start + (end - start) // 2
+        found = {}
+        for r in search_repos(query, start, middle) + search_repos(query, middle + timedelta(days=1), end):
+            found[r["full_name"].lower()] = r
+        return list(found.values())
+    if total > SEARCH_CAP:
+        print(f"search capped at {SEARCH_CAP} results on {start}: {query}", file=sys.stderr)
+    if total == 0:
+        return []
+    out = gh_search("-f", f"q={ranged}", "-f", "per_page=100", "--paginate", "--jq", ".items[]")
     return [json.loads(line) for line in out.splitlines() if line.strip()]
 
 
@@ -196,7 +227,7 @@ def load_gladys():
     for r in search_repos(f"topic:{WIP_TOPIC}"):
         candidates.setdefault(r["full_name"].lower(), (r, NO_TOPIC))
         wip.add(r["full_name"].lower())
-    for r in search_repos(NAME_SEARCH):
+    for r in search_repos(NAME_SEARCH, NAME_SEARCH_START):
         candidates.setdefault(r["full_name"].lower(), (r, NO_TOPIC))
     for line in (DATA / "extra-repos.txt").read_text(encoding="utf-8").splitlines():
         line = line.strip()
@@ -371,6 +402,8 @@ def forum_posts():
 
 def spaced(text):
     """Lowercase ASCII words, padded with spaces so that " name " only matches whole words."""
+    # Typographic apostrophes separate words like "'" does: "jusqu’au n° 433" must not become "jusquau n 433".
+    text = re.sub(r"[\u2018\u2019\u02bc\u2032`´]", " ", text)
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
     return " " + re.sub(r"[^a-z0-9]+", " ", text).strip() + " "
 
