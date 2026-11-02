@@ -320,3 +320,17 @@ F20|William-De71/gladys-tplink-router|-
 1156|guim31/gladys-avalanche|E
 # Waze abandonné par lmilcent (forum #279) : son dépôt sans topic ne couvre plus l'idée.
 52|LM1LC3N7/gladys-waze-travel-time|-
+# 2026-11-03 : rapprochements manqués (noms différents), vérifiés sur la description du manifeste.
+688|guim31/gladys-faa|E
+1003|guim31/gladys-air-norway|E
+1099|guim31/gladys-air-norway|P
+621|LM1LC3N7/gladys-alfen|E
+734|William-De71/gladys-waste-collection-schedule|E
+756|William-De71/gladys-waste-collection-schedule|E
+594|guim31/gladys-bourse|P
+607|guim31/gladys-bourse|P
+638|guim31/gladys-bourse|P
+1138|guim31/gladys-bourse|P
+697|guim31/gladys-colis|P
+885|guim31/gladys-emsc|P
+1055|guim31/gladys-emsc|P
