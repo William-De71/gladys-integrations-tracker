@@ -334,3 +334,6 @@ F20|William-De71/gladys-tplink-router|-
 697|guim31/gladys-colis|P
 885|guim31/gladys-emsc|P
 1055|guim31/gladys-emsc|P
+
+# 2026-11-07 : rapprochement manqué (nom différent), vérifié sur la description du manifeste.
+210|prohand/gladys-openmeteoforecastsolar|E
