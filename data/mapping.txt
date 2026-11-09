@@ -344,3 +344,9 @@ N188|LM1LC3N7/gladys-sungrow|-
 N611|guim31/gladys-mastodon|-
 N627|LM1LC3N7/gladys-sonnen|-
 N594|quentinlegay/gladys-ffbb|P
+# 2026-11-09 : P1 de novembre publiées par guim31 (forum #464-466) ; nom différent, réservation écrite « lines 1 and 2 ».
+N1|guim31/gladys-wyoming|E
+N2|guim31/gladys-wyoming|E
+N3|guim31/gladys-local-lists|E
+N9|guim31/gladys-local-ai|E
+N41|guim31/gladys-local-ai|E
