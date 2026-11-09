@@ -1,7 +1,7 @@
 # Suivi des intégrations Gladys
 
-**Qui fait quoi ?** La [liste des intégrations Home Assistant](https://gist.github.com/Pierre-Gilles/9c4ba77a0faa47c4ea67c74351db9094)
-de Pierre-Gilles, en face des intégrations externes Gladys qui existent déjà : publiées au store, en cours sur GitHub,
+**Qui fait quoi ?** Les listes d'intégrations de Pierre-Gilles ([octobre](https://gist.github.com/Pierre-Gilles/9c4ba77a0faa47c4ea67c74351db9094),
+[novembre](https://gist.github.com/Pierre-Gilles/e02f7eda1e398401e0a9468a73d085fe)), en face des intégrations externes Gladys qui existent déjà : publiées au store, en cours sur GitHub,
 ou annoncées sur le forum. Pour éviter de développer deux fois la même chose.
 
 👉 **https://william-de71.github.io/gladys-integrations-tracker/**
@@ -26,18 +26,27 @@ La page est reconstruite automatiquement toutes les 30 minutes, et peut être
 
 Sans le template, le topic `gladys-integration-wip` fait le même effet : le store l'ignore, la page le repère.
 
-## Les deux sources de la liste Home Assistant
+## Les trois sources de la liste
 
-- **La liste de Pierre-Gilles** (idées n° 1 à 1190), lue dans son gist à chaque mise à jour. Elle ne contient que ce
+- **La liste d'octobre de Pierre-Gilles** (idées n° 1 à 1190), lue dans son gist à chaque mise à jour. Elle ne contient que ce
   que Gladys ne couvrait pas encore le 12 octobre 2026.
 - **L'analyse forum de juillet** (entrées F1, F2…, en tête de liste) : les intégrations Home Assistant populaires du
   [premier message du fil](https://community.gladysassistant.com/t/10385/1) que la liste a retirées parce que Gladys
   les couvrait déjà, en natif (MQTT, Matter, Google Cast…) ou par une intégration du store (Philips Hue, Sonos,
   Shelly…). Elles sont figées dans `data/ha-forum-juillet.csv`, numérotées par usage décroissant. Sans elles, ces
   intégrations Gladys apparaissaient « hors liste ».
+- **La liste de novembre de Pierre-Gilles** (entrées N1 à N1000, en fin de liste), lue dans son
+  [second gist](https://gist.github.com/Pierre-Gilles/e02f7eda1e398401e0a9468a73d085fe) à chaque mise à jour. Une
+  entrée qui reprend une idée déjà présente (même identifiant Home Assistant, ou même nom) est fusionnée avec elle :
+  l'idée garde son numéro d'octobre, et affiche « Aussi dans la liste de novembre : N12 (P1) ». Les autres deviennent
+  des idées N1, N2… Les numéros N servent sur le forum comme les autres (« n° N12 »), même fusionnés. La liste de
+  novembre ajoute le type d'intégration Gladys (appareils, fournisseur IA, synthèse vocale, calendrier…) et les pays,
+  filtrables sur la page, ainsi que là où l'idée a été repérée (HA, HACS, ioBroker, Homey, Jeedom…). Son catalogue de contrats
+  d'énergie (`energy-contracts-catalogue-candidates.csv`) n'est pas repris : ce ne sont pas des intégrations.
 
-Les tuiles P1 à P4 restent calculées sur la liste de Pierre-Gilles, pour rester comparables à ses chiffres ;
-l'analyse de juillet a sa propre tuile.
+Les tuiles P1 à P4 restent calculées sur la liste d'octobre, pour rester comparables aux chiffres de Pierre-Gilles ;
+la liste de novembre (avec ses idées fusionnées, et ses propres priorités P1 à P3) et l'analyse de juillet ont leurs
+propres tuiles.
 
 ## Statuts
 
@@ -58,7 +67,8 @@ Une idée avec plusieurs dépôts, ou deux intégrations Gladys du même nom, so
 
 Toutes les 30 minutes, `build.py` relit tout, sans rien à tenir à jour à la main :
 
-- la liste de Pierre-Gilles : le CSV du gist (`3_full-list.csv`) ;
+- les listes de Pierre-Gilles : les CSV de ses gists (`3_full-list.csv` en octobre, `gladys-next-1000-integrations.csv`
+  en novembre) ;
 - le store : `https://integration-store-storage.gladysassistant.com/index.json` (nom, version, cover) ;
 - les dépôts GitHub qui ont le topic [`gladys-assistant-integration`](https://github.com/topics/gladys-assistant-integration) ;
 - les dépôts GitHub nommés « gladys… » qui contiennent un manifeste `gladys-assistant-integration.json` :
@@ -82,28 +92,29 @@ qui correspondent à la même idée de la liste.
 Les annonces du [fil du forum](https://community.gladysassistant.com/t/10385) sont lues aussi, dans le texte qui
 suit « je prends » (ou « je m'occupe de », « je pars sur »…), jusqu'à la phrase suivante qui dit que l'idée appartient
 à quelqu'un d'autre (« reste chez », « pris par »…) :
-- les **numéros de la liste** cités (« Victron Energy GX (P1 n° 74) », ou « n° F39 » pour l'analyse de juillet) sont le signal le plus sûr : quand une annonce
+- les **numéros de la liste** cités (« Victron Energy GX (P1 n° 74) », « n° F39 » pour l'analyse de juillet, « n° N12 » pour la liste de novembre) sont le signal le plus sûr : quand une annonce
   en contient, seuls eux comptent, car ses descriptions citent souvent d'autres idées (« ça couvre Tasmota,
   BTHome… ») ;
 - sinon, les noms de la liste écrits en entier, le plus long l'emportant quand deux se recouvrent (« Octopus Energy
   France » plutôt qu'« Octopus Energy »). Un nom raccourci (« Solcast » pour « Solcast PV Forecast ») n'est pas lu :
   `data/claims.txt` rattrape ces cas.
 
-**Astuce pour réserver : citez le numéro de la liste**, comme « Solcast PV Forecast (n° 41) ».
+**Astuce pour réserver : citez le numéro de la liste**, comme « Solcast PV Forecast (n° 41) » ou « Piper TTS (n° N1) ».
 
 Les messages de bilan de Pierre-Gilles et les citations sont ignorés. Chaque annonce renvoie vers son message, pour
 vérifier d'un clic, et s'efface d'elle-même au bout de 30 jours sans dépôt. Dès qu'un dépôt existe, c'est lui qui fait foi.
 
 ### Corrections facultatives
 
-Rien n'est obligatoire, mais trois fichiers de `data/` permettent d'affiner :
+Rien n'est obligatoire, mais quelques fichiers de `data/` permettent d'affiner :
 
 | Fichier | Usage | Format |
 |---|---|---|
-| `mapping.txt` | relier une idée (n° de la liste ou F de l'analyse de juillet) et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° HA \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
-| `claims.txt` | signaler une annonce que la lecture du forum a manquée, ou libérer une idée abandonnée par son auteur (`-` à la place de qui : les annonces du forum et le statut du gist ne comptent plus) | `N° HA \| qui \| source` |
-| `notes.txt` | afficher un avertissement sous une idée (conditions d'utilisation, accès restreint), en français et en anglais | `N° HA \| texte FR \| texte EN` |
-| `bluetooth.txt` | corriger le repérage des idées Bluetooth (automatique : « Bluetooth » ou « BLE » dans le nom ou la description), utilisé par le filtre Bluetooth | `N° HA \| oui ou non` |
+| `mapping.txt` | relier une idée (n° de la liste, F de l'analyse de juillet ou N de la liste de novembre) et un dépôt aux noms différents, ou retirer une fausse correspondance automatique | `N° \| propriétaire/dépôt \| E` (équivalente), `P` (partielle) ou `-` (fausse) |
+| `claims.txt` | signaler une annonce que la lecture du forum a manquée, ou libérer une idée abandonnée par son auteur (`-` à la place de qui : les annonces du forum et le statut du gist ne comptent plus) | `N° \| qui \| source` |
+| `notes.txt` | afficher un avertissement sous une idée (conditions d'utilisation, accès restreint), en français et en anglais | `N° \| texte FR \| texte EN` |
+| `bluetooth.txt` | corriger le repérage des idées Bluetooth (automatique : « Bluetooth » ou « BLE » dans le nom ou la description), utilisé par le filtre Bluetooth | `N° \| oui ou non` |
+| `merge.txt` | corriger la fusion de la liste de novembre : rattacher une entrée N à une idée existante, ou la garder à part (`-`) | `N… \| n° de l'idée` ou `-` |
 | `extra-repos.txt` | ajouter un dépôt que les recherches ne trouvent pas | `propriétaire/dépôt` |
 
 Un push sur ces fichiers relance la page tout de suite, sans attendre la mise à jour suivante.
@@ -143,7 +154,7 @@ dernière mise à jour : au-delà de 75 minutes, elle le signale en rouge, et le
 
 ## English
 
-Tracks which integrations from Pierre-Gilles' Home Assistant list already exist for Gladys (in the store, in progress
+Tracks which integrations from Pierre-Gilles' lists (October, and November as N1…N1000, merged with the October ideas it repeats) already exist for Gladys (in the store, in progress
 on GitHub, or claimed on the forum), so that two developers don't build the same one. Rebuilt every 6 hours from the
 store index, GitHub (the `gladys-assistant-integration` topic and repositories holding a Gladys manifest) and the list. To claim an integration, create your
 repository on day one from the integration template, without the store topic (or with the

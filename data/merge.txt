@@ -1,0 +1,6 @@
+# Fusion de la liste de novembre (N1…N1000) avec l'existant (facultatif : la fusion est automatique).
+# Une entrée de novembre qui a le même identifiant Home Assistant ou le même nom qu'une idée de la liste d'octobre
+# (ou de l'analyse de juillet) est rangée sous cette idée, et garde son numéro N pour le forum.
+# Format : N° de novembre | N° de l'idée à laquelle la rattacher (1…1190 ou F…), ou - pour la garder à part
+N611|-
+N740|-

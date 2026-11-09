@@ -147,7 +147,7 @@ footer a { color: var(--muted); text-decoration: underline; }
   <header>
     <div>
       <h1 data-i18n="title">Suivi des intégrations Gladys</h1>
-      <p class="sub" data-i18n="subtitle">La liste des intégrations Home Assistant de Pierre-Gilles, face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et la liste.</p>
+      <p class="sub" data-i18n="subtitle">Les listes d'intégrations de Pierre-Gilles (octobre, puis novembre : N1…), face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et les listes.</p>
       <p class="updated" id="updated" aria-live="polite"></p>
     </div>
     <div class="tools">
@@ -180,6 +180,9 @@ footer a { color: var(--muted); text-decoration: underline; }
     <select id="f-prio" aria-label="Priorité"></select>
     <select id="f-cat" aria-label="Catégorie"></select>
     <select id="f-src" aria-label="Source"></select>
+    <select id="f-type" aria-label="Type Gladys"></select>
+    <select id="f-access" aria-label="Accès"></select>
+    <select id="f-area" aria-label="Zone"></select>
     <select id="f-bt" aria-label="Bluetooth"></select>
     <label><input type="checkbox" id="f-dup"> <span data-i18n="dupOnly">Doublons seulement</span></label>
     <label id="nohw-wrap"><input type="checkbox" id="f-nohw"> <span data-i18n="noHw">Sans matériel</span></label>
@@ -204,7 +207,7 @@ footer a { color: var(--muted); text-decoration: underline; }
   var I18N = {
     fr: {
       title: "Suivi des intégrations Gladys",
-      subtitle: "La liste des intégrations Home Assistant de Pierre-Gilles, face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et la liste.",
+      subtitle: "Les listes d'intégrations de Pierre-Gilles (octobre, puis novembre : N1…), face à ce qui existe déjà pour Gladys. Mis à jour automatiquement depuis le store, GitHub et les listes.",
       howtoTitle: "Tu veux prendre une intégration ?",
       howto1: "Vérifie ici qu'elle est <b>libre</b> (et qu'elle n'apparaît pas déjà dans l'onglet « Intégrations Gladys »).",
       howto2: "Crée ton dépôt <b>dès le premier jour</b>, depuis le <a href=\"https://github.com/GladysAssistant/integration-template-js\">template</a> et <b>sans</b> le topic du store : il apparaît ici « en cours » à la mise à jour suivante. Le topic <code>gladys-assistant-integration</code> ne se pose qu'à la publication.",
@@ -214,8 +217,8 @@ footer a { color: var(--muted); text-decoration: underline; }
       allBt: "Bluetooth ou non", btHide: "Sans Bluetooth", btOnly: "Bluetooth seulement",
       loading: "Chargement…", nothing: "Aucun résultat.", loadError: "Impossible de charger data.json.",
       allStatus: "Tous les statuts", allPrio: "Toutes priorités", allCat: "Toutes catégories",
-      statIdeas: "idées dans la liste", statTaken: "déjà prises ou faites",
-      statPrio: function (p) { return "idées " + p + " couvertes"; },
+      statIdeas: "idées dans la liste d'octobre", statTaken: "déjà prises ou faites",
+      statPrio: function (p) { return "octobre " + p + " couvertes"; },
       updated: "Dernière mise à jour :", late: "en retard, cliquez sur « Mettre à jour »",
       ago: function (m) {
         if (m < 1) return "à l'instant";
@@ -229,13 +232,19 @@ footer a { color: var(--muted); text-decoration: underline; }
       cStatus: "Statut", cGladys: "Intégration Gladys", cCover: "Cover", cName: "Intégration", cAuthor: "Auteur",
       cVersion: "Version", cHaEq: "Équivalent dans la liste", cSince: "Vue depuis",
       st: { store: "Publiée", native: "Native Gladys", topic: "Pas encore au store", no_topic: "En cours", inactive: "Hors store, inactive", claimed: "Annoncée (forum)", free: "Libre", archived: "Archivée ou dépréciée" },
-      announced: "Annoncée :", allSrc: "Toutes sources", srcListShort: "Liste de Pierre-Gilles",
+      announced: "Annoncée :", allSrc: "Toutes sources", srcListShort: "Liste d'octobre (1…1190)",
       srcForumShort: "Analyse forum de juillet", julyNote: "Analyse forum de juillet",
+      srcNovShort: "Liste de novembre (N…)", novNote: "Liste de novembre", novAlso: "Aussi dans la liste de novembre :",
+      seenAt: "vue chez", installs: "inst.",
+      allType: "Tous types Gladys", allAccess: "Local ou cloud", allArea: "Toutes zones",
+      access: { local: "Local", cloud: "Cloud" }, worldwide: "Monde entier",
+      types: { device: "Appareils", provider: "Fournisseur", communication: "Messagerie", calendar: "Calendrier", ai: "IA", tts: "Synthèse vocale", weather: "Météo" },
+      statNov: "idées de novembre couvertes", statNovPrio: function (p) { return "novembre " + p + " couvertes"; },
       statJuly: "analyse de juillet couvertes (F1…)", lastCommit: "dernier commit le", template: "template jamais rempli", partial: "partielle", auto: "auto, même nom", dup: "doublon", dupWith: "doublon avec", outside: "hors liste", noCover: "pas de cover",
       footer: function (d) {
         return "Généré le " + d + ". Sources : ";
       },
-      srcList: "liste de Pierre-Gilles", srcStore: "store Gladys", srcForum: "fil forum", srcTopic: "topic GitHub",
+      srcList: "liste d'octobre", srcNov: "liste de novembre", srcStore: "store Gladys", srcForum: "fil forum", srcTopic: "topic GitHub",
       refresh: "Mettre à jour",
       refreshHint: "Relance la mise à jour sur GitHub : bouton « Run workflow » (droits d'écriture sur le dépôt nécessaires). La page est à jour environ une minute après.",
       toTop: "Haut de page", downloads: "Télécharger : ", xlsx: "classeur .xlsx", csvHa: "CSV liste HA", csvGl: "CSV intégrations Gladys",
@@ -243,7 +252,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     },
     en: {
       title: "Gladys integrations tracker",
-      subtitle: "Pierre-Gilles' list of Home Assistant integrations, next to what already exists for Gladys. Updated automatically from the store, GitHub and the list.",
+      subtitle: "Pierre-Gilles' integration lists (October, then November: N1…), next to what already exists for Gladys. Updated automatically from the store, GitHub and the lists.",
       howtoTitle: "Want to take an integration?",
       howto1: "Check here that it is <b>free</b> (and not already in the “Gladys integrations” tab).",
       howto2: "Create your repository <b>on day one</b>, from the <a href=\"https://github.com/GladysAssistant/integration-template-js\">template</a> and <b>without</b> the store topic: it shows up here as “in progress” on the next update. Add the <code>gladys-assistant-integration</code> topic only when you publish.",
@@ -253,8 +262,8 @@ footer a { color: var(--muted); text-decoration: underline; }
       allBt: "Bluetooth or not", btHide: "Without Bluetooth", btOnly: "Bluetooth only",
       loading: "Loading…", nothing: "No results.", loadError: "Could not load data.json.",
       allStatus: "All statuses", allPrio: "All priorities", allCat: "All categories",
-      statIdeas: "ideas in the list", statTaken: "already taken or done",
-      statPrio: function (p) { return p + " ideas covered"; },
+      statIdeas: "ideas in the October list", statTaken: "already taken or done",
+      statPrio: function (p) { return "October " + p + " covered"; },
       updated: "Last update:", late: "late, click “Update”",
       ago: function (m) {
         if (m < 1) return "just now";
@@ -268,13 +277,19 @@ footer a { color: var(--muted); text-decoration: underline; }
       cStatus: "Status", cGladys: "Gladys integration", cCover: "Cover", cName: "Integration", cAuthor: "Author",
       cVersion: "Version", cHaEq: "Match in the list", cSince: "Seen since",
       st: { store: "Published", native: "Built into Gladys", topic: "Not in the store yet", no_topic: "In progress", inactive: "Not in store, inactive", claimed: "Announced (forum)", free: "Free", archived: "Archived or deprecated" },
-      announced: "Announced:", allSrc: "All sources", srcListShort: "Pierre-Gilles' list",
+      announced: "Announced:", allSrc: "All sources", srcListShort: "October list (1…1190)",
       srcForumShort: "July forum analysis", julyNote: "July forum analysis",
+      srcNovShort: "November list (N…)", novNote: "November list", novAlso: "Also in the November list:",
+      seenAt: "seen in", installs: "inst.",
+      allType: "All Gladys types", allAccess: "Local or cloud", allArea: "All areas",
+      access: { local: "Local", cloud: "Cloud" }, worldwide: "Worldwide",
+      types: { device: "Devices", provider: "Provider", communication: "Messaging", calendar: "Calendar", ai: "AI", tts: "Text-to-speech", weather: "Weather" },
+      statNov: "November ideas covered", statNovPrio: function (p) { return "November " + p + " covered"; },
       statJuly: "July analysis covered (F1…)", lastCommit: "last commit on", template: "template never filled in", partial: "partial", auto: "auto, same name", dup: "duplicate", dupWith: "duplicate of", outside: "not in the list", noCover: "no cover",
       footer: function (d) {
         return "Generated on " + d + ". Sources: ";
       },
-      srcList: "Pierre-Gilles' list", srcStore: "Gladys store", srcForum: "forum topic", srcTopic: "GitHub topic",
+      srcList: "October list", srcNov: "November list", srcStore: "Gladys store", srcForum: "forum topic", srcTopic: "GitHub topic",
       refresh: "Update",
       refreshHint: "Starts an update on GitHub: “Run workflow” button (needs write access to the repository). The page is up to date about a minute later.",
       toTop: "Back to top", downloads: "Download: ", xlsx: ".xlsx workbook", csvHa: "HA list CSV", csvGl: "Gladys integrations CSV",
@@ -311,6 +326,17 @@ footer a { color: var(--muted); text-decoration: underline; }
   function badge(status) {
     return '<span class="badge s-' + status + '">' + esc(t("st")[status]) + "</span>";
   }
+  // The November entries are the only ones with a Gladys type, and their numbers may stand for an October idea.
+  function novPrio(h) { return h.nov.length ? h.nov[0].prio : ""; }
+  function haName(h) {
+    return h.link
+      ? '<a class="ha-name" href="' + esc(h.link) + '" target="_blank" rel="noopener">' + esc(h.name) + "</a>"
+      : '<span class="ha-name">' + esc(h.name) + "</span>";
+  }
+  function fmtInstalls(n) {
+    return n.toLocaleString(state.lang === "fr" ? "fr-FR" : "en-GB") + " " + t("installs");
+  }
+  function areas(h) { return h.area.split(",").map(function (a) { return a.trim(); }); }
   function cover(g) {
     if (g && g.cover) return '<img class="cover" loading="lazy" alt="" src="' + esc(g.cover) + '">';
     return '<span class="cover empty">' + esc(t("noCover")) + "</span>";
@@ -353,9 +379,17 @@ footer a { color: var(--muted); text-decoration: underline; }
     $("f-src").classList.toggle("hidden", !isHa);
     $("nohw-wrap").classList.toggle("hidden", !isHa);
     $("f-bt").classList.toggle("hidden", !isHa);
+    ["f-type", "f-access", "f-area"].forEach(function (id) { $(id).classList.toggle("hidden", !isHa); });
     if (!data) return;
     fillSelect($("f-prio"), t("allPrio"), ["P1", "P2", "P3", "P4"]);
-    fillSelect($("f-src"), t("allSrc"), ["list", "forum"], [t("srcListShort"), t("srcForumShort")]);
+    fillSelect($("f-src"), t("allSrc"), ["list", "nov", "forum"], [t("srcListShort"), t("srcNovShort"), t("srcForumShort")]);
+    var types = Object.keys(t("types"));
+    fillSelect($("f-type"), t("allType"), types, types.map(function (k) { return t("types")[k]; }));
+    fillSelect($("f-access"), t("allAccess"), ["local", "cloud"], [t("access").local, t("access").cloud]);
+    var zones = {};
+    data.ha.forEach(function (h) { areas(h).forEach(function (a) { if (a && a !== "Worldwide") zones[a] = 1; }); });
+    var zoneList = ["Worldwide"].concat(Object.keys(zones).sort());
+    fillSelect($("f-area"), t("allArea"), zoneList, zoneList.map(function (z) { return z === "Worldwide" ? t("worldwide") : z; }));
     fillSelect($("f-bt"), t("allBt"), ["hide", "only"], [t("btHide"), t("btOnly")]);
     var cats = {};
     data.ha.forEach(function (h) { h.category.split(" / ").forEach(function (c) { cats[c] = 1; }); });
@@ -366,6 +400,9 @@ footer a { color: var(--muted); text-decoration: underline; }
     // The tiles stay on Pierre-Gilles' list, to compare with his figures; the July analysis has its own tile.
     var ha = data.ha.filter(function (h) { return h.source === "list"; });
     var july = data.ha.filter(function (h) { return h.source === "forum"; });
+    // The November list: its new ideas (N…) and the October or July ideas it named again.
+    var nov = data.ha.filter(function (h) { return h.nov.length; });
+    var novDone = nov.filter(function (h) { return h.status !== "free"; }).length;
     var julyDone = july.filter(function (h) { return h.status !== "free"; }).length;
     var taken = ha.filter(function (h) { return h.status !== "free"; }).length;
     var inStore = data.gladys.filter(function (g) { return g.status === "store"; }).length;
@@ -382,6 +419,12 @@ footer a { color: var(--muted); text-decoration: underline; }
         var all = ha.filter(function (h) { return h.prio === p; });
         var done = all.filter(function (h) { return h.status !== "free"; }).length;
         return tile(done + " <small>/ " + all.length + "</small>", t("statPrio")(p), all.length ? done / all.length : 0, "prio-tile");
+      }).join("") +
+      tile(novDone + " <small>/ " + nov.length + "</small>", t("statNov"), nov.length ? novDone / nov.length : 0, "prio-tile") +
+      ["P1", "P2", "P3"].map(function (p) {
+        var all = nov.filter(function (h) { return novPrio(h) === p; });
+        var done = all.filter(function (h) { return h.status !== "free"; }).length;
+        return tile(done + " <small>/ " + all.length + "</small>", t("statNovPrio")(p), all.length ? done / all.length : 0, "prio-tile");
       }).join("") +
       tile(julyDone + " <small>/ " + july.length + "</small>", t("statJuly"), july.length ? julyDone / july.length : 0, "prio-tile") +
       tile(inStore, t("statStore")) +
@@ -409,14 +452,17 @@ footer a { color: var(--muted); text-decoration: underline; }
 
   function sortValue(row, key) {
     if (key === "status") return STATUS_ORDER.indexOf(row.status);
-    if (key === "usage") return parseFloat(row.usage) || 0;
-    if (key === "ha") return row.ha.length ? row.ha[0] : 1e9;
+    // Usage share first (October list), then the installations count alone (November list).
+    if (key === "usage") return (parseFloat(row.usage) || 0) * 1e7 + (row.usage ? 0 : row.installs || 0);
+    if (key === "ha") return row.ha.length ? haByNum[row.ha[0]].order : 1e9;
     if (key === "n") return row.order;
     return norm(row[key]);
   }
 
   function haText(h) {
-    var parts = [h.n, h.name, h.category, h.desc, h.area, h.claim, h.note, h.warning ? h.warning[state.lang] : ""];
+    var parts = [h.n, h.name, h.category, h.desc, h.area, h.claim, h.note, h.warning ? h.warning[state.lang] : "",
+      h.seen, h.gtype ? t("types")[h.gtype] : ""];
+    h.nov.forEach(function (x) { parts.push(x.n); });
     h.matches.forEach(function (m) {
       var g = byRepo[m.repo];
       parts.push(m.repo, g.name, g.author);
@@ -445,12 +491,20 @@ footer a { color: var(--muted); text-decoration: underline; }
     return "<tr>" +
       '<td class="num">' + h.n + "</td>" +
       '<td><span class="prio">' + esc(h.prio) + "</span></td>" +
-      '<td><a class="ha-name" href="' + esc(h.link) + '" target="_blank" rel="noopener">' + esc(h.name) + "</a>" +
+      "<td>" + haName(h) +
       (h.source === "forum" ? '<br><span class="src-note">' + esc(t("julyNote")) + " · " + esc(h.note) + "</span>" : "") +
+      (h.source === "nov"
+        ? '<br><span class="src-note">' + esc(t("novNote")) + (h.gtype ? " · " + esc(t("types")[h.gtype] || h.gtype) : "") + "</span>"
+        : h.nov.length
+          ? '<br><span class="src-note">' + esc(t("novAlso")) + " " + h.nov.map(function (x) {
+              return esc(x.n) + " (" + esc(x.prio) + ")";
+            }).join(", ") + (h.gtype ? " · " + esc(t("types")[h.gtype] || h.gtype) : "") + "</span>"
+          : "") +
       '<div class="small">' + esc(h.desc) + "</div>" +
+      (h.seen ? '<div class="small">' + esc(t("seenAt")) + " " + esc(h.seen) + "</div>" : "") +
       (h.warning ? '<div class="warn">⚠ ' + esc(h.warning[state.lang] || h.warning.fr) + "</div>" : "") + "</td>" +
       '<td class="small">' + esc(h.category) + "</td>" +
-      '<td class="num">' + esc(h.usage) + "</td>" +
+      '<td class="num">' + (h.usage ? esc(h.usage) : h.installs != null ? esc(fmtInstalls(h.installs)) : "") + "</td>" +
       "<td>" + badge(h.status) + dup + "</td>" +
       '<td class="gl-list">' + gl + "</td></tr>";
   }
@@ -458,7 +512,8 @@ footer a { color: var(--muted); text-decoration: underline; }
   function renderGlRow(g) {
     var ha = g.ha.map(function (n) {
       var h = haByNum[n];
-      return '<a href="' + esc(h.link) + '" target="_blank" rel="noopener">' + n + " · " + esc(h.name) + "</a>";
+      var label = esc(n) + " · " + esc(h.name);
+      return h.link ? '<a href="' + esc(h.link) + '" target="_blank" rel="noopener">' + label + "</a>" : label;
     }).join("<br>") || '<span class="small">' + esc(t("outside")) + "</span>";
     if (g.dups.length) {
       ha += '<div><span class="badge dup">' + esc(t("dupWith")) + "</span> " + g.dups.map(repoLink).join(", ") + "</div>";
@@ -483,13 +538,18 @@ footer a { color: var(--muted); text-decoration: underline; }
     var rows = isHa ? data.ha : data.gladys;
     var q = norm($("q").value.trim());
     var fsrc = $("f-src").value, fbt = $("f-bt").value;
+    var ftype = $("f-type").value, facc = $("f-access").value, farea = $("f-area").value;
     var fs = $("f-status").value, fp = $("f-prio").value, fc = $("f-cat").value;
     var fd = $("f-dup").checked, fh = $("f-nohw").checked;
     var out = rows.filter(function (r) {
       if (fs && r.status !== fs) return false;
       if (isHa) {
-        if (fp && r.prio !== fp) return false;
-        if (fsrc && r.source !== fsrc) return false;
+        // With the November list chosen, the priority is the November one.
+        if (fp && (fsrc === "nov" ? novPrio(r) : r.prio) !== fp) return false;
+        if (fsrc === "nov" ? !r.nov.length : fsrc && r.source !== fsrc) return false;
+        if (ftype && r.gtype !== ftype) return false;
+        if (facc && norm(r.access).indexOf(facc) < 0) return false;
+        if (farea && areas(r).indexOf(farea) < 0) return false;
         if (fbt && r.bluetooth !== (fbt === "only")) return false;
         if (fc && r.category.split(" / ").indexOf(fc) < 0) return false;
         if (fd && !r.dup) return false;
@@ -520,7 +580,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     var s = data.sources;
     function a(href, label) { return '<a href="' + esc(href) + '">' + esc(label) + "</a>"; }
     $("footer").innerHTML = esc(t("footer")(fmtDate(data.generated_at))) +
-      [a(s.ha_list, t("srcList")), a(s.store, t("srcStore")), a(s.topic, t("srcTopic")), a(s.forum, t("srcForum"))].join(" · ") +
+      [a(s.ha_list, t("srcList")), a(s.ha_list_nov, t("srcNov")), a(s.store, t("srcStore")), a(s.topic, t("srcTopic")), a(s.forum, t("srcForum"))].join(" · ") +
       "<br>" + esc(t("downloads")) +
       [a("suivi-integrations-gladys.xlsx", t("xlsx")), a("liste-ha-gladys.csv", t("csvHa")),
         a("integrations-gladys.csv", t("csvGl"))].join(" · ");
@@ -565,7 +625,7 @@ footer a { color: var(--muted); text-decoration: underline; }
     state.sort[state.tab] = [th.dataset.sort, s[0] === th.dataset.sort ? -s[1] : 1];
     render();
   });
-  ["q", "f-status", "f-prio", "f-cat", "f-src", "f-bt", "f-dup", "f-nohw"].forEach(function (id) {
+  ["q", "f-status", "f-prio", "f-cat", "f-src", "f-type", "f-access", "f-area", "f-bt", "f-dup", "f-nohw"].forEach(function (id) {
     $(id).addEventListener("input", render);
   });
   $("lang").addEventListener("click", function () {

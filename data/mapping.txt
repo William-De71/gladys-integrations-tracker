@@ -1,5 +1,5 @@
 # Corrections du rapprochement automatique (facultatif : tout le reste est automatique).
-# Format : N° dans la liste HA | propriétaire/dépôt | E (équivalente), P (partielle) ou - (correspondance automatique fausse)
+# Format : N° dans la liste (1…1190, F… ou N…) | propriétaire/dépôt | E (équivalente), P (partielle) ou - (correspondance automatique fausse)
 122|guim31/gladys-solaredge|P
 1|guim31/gladys-met-no|E
 3|guim31/gladys-ping-wol|E
@@ -337,3 +337,10 @@ F20|William-De71/gladys-tplink-router|-
 
 # 2026-11-07 : rapprochement manqué (nom différent), vérifié sur la description du manifeste.
 210|prohand/gladys-openmeteoforecastsolar|E
+# 2026-11-09 : liste de novembre. Idées qui sont une autre version d'une intégration existante (type ai plutôt
+# que device, local plutôt que cloud, borne plutôt que batterie) : leur nom entre parenthèses les distingue.
+N9|guim31/gladys-ollama|-
+N188|LM1LC3N7/gladys-sungrow|-
+N611|guim31/gladys-mastodon|-
+N627|LM1LC3N7/gladys-sonnen|-
+N594|quentinlegay/gladys-ffbb|P

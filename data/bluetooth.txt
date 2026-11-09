@@ -1,5 +1,5 @@
 # Corrections du repérage Bluetooth (automatique : « Bluetooth » ou « BLE » dans le nom ou la description).
-# Format : N° dans la liste HA | oui (Bluetooth) ou non (Bluetooth seulement pour une partie des appareils, à côté du Wi-Fi ou du Zigbee)
+# Format : N° dans la liste (1…1190, F… ou N…) | oui (Bluetooth) ou non (Bluetooth seulement pour une partie des appareils, à côté du Wi-Fi ou du Zigbee)
 18|non
 181|non
 519|non

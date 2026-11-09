@@ -4,6 +4,8 @@
 Everything is found again on every run, with nothing to maintain by hand:
   - Pierre-Gilles' gist (3_full-list.csv), and data/ha-forum-juillet.csv: the popular HA integrations of his
     July analysis (forum post #1) that the gist left out because Gladys already covered them;
+  - his November list (gladys-next-1000-integrations.csv), merged in: an idea already in the October list gains its
+    November number and priority, the others become new ideas N1, N2…;
   - the live Gladys store index (index.json);
   - GitHub repositories with the gladys-assistant-integration topic (published, or about to be);
   - GitHub repositories named "gladys…" that contain a gladys-assistant-integration.json manifest
@@ -18,6 +20,7 @@ Optional corrections, never required:
   - data/mapping.txt: HA list number | repository | E (equivalent), P (partial) or - (wrong automatic match);
   - data/claims.txt: claims the forum reading misses, or ideas freed again ("-" as the claimant);
   - data/notes.txt: warnings shown under an idea (terms of use...), in French and English;
+  - data/merge.txt: November entries merged into the wrong idea, or not merged when they should be;
   - data/extra-repos.txt: Gladys repositories the searches cannot find.
 
 Output, in site/: data.json (read by index.html), one CSV per table, and an .xlsx workbook.
@@ -50,6 +53,18 @@ GIST_ID = "9c4ba77a0faa47c4ea67c74351db9094"
 GIST_URL = f"https://gist.github.com/Pierre-Gilles/{GIST_ID}"
 # The raw URL needs no token: the Actions GITHUB_TOKEN cannot read the gists API.
 GIST_CSV = f"https://gist.githubusercontent.com/Pierre-Gilles/{GIST_ID}/raw/3_full-list.csv"
+# November list: 1000 ideas, numbered N1… here so that they never collide with the October numbers.
+NOV_GIST_ID = "e02f7eda1e398401e0a9468a73d085fe"
+NOV_GIST_URL = f"https://gist.github.com/Pierre-Gilles/{NOV_GIST_ID}"
+NOV_GIST_CSV = f"https://gist.githubusercontent.com/Pierre-Gilles/{NOV_GIST_ID}/raw/gladys-next-1000-integrations.csv"
+# November categories, written like the October ones when there is an equivalent.
+NOV_CATEGORIES = {
+    "energy": "Energy", "climate": "Heating & cooling", "environment": "Weather & environment",
+    "appliances": "Appliances & garden", "lighting": "Lighting, plugs & covers", "multimedia": "Multimedia",
+    "security": "Cameras & security", "protocols": "Protocols & hubs", "notifications": "Messaging & notifications",
+    "network": "Network & presence", "assistants": "Voice assistants", "services": "Services & daily life",
+    "transport": "Transport", "vehicles": "Vehicles", "leisure": "Leisure", "servers": "Servers & IT",
+}
 STORE_INDEX = "https://integration-store-storage.gladysassistant.com/index.json"
 STORE_PAGE = "https://gladysassistant.com/fr/docs/integrations/external/"
 FORUM = "https://community.gladysassistant.com"
@@ -123,7 +138,8 @@ def read_table(path):
 
 
 def load_ha_list():
-    """Pierre-Gilles' list, then the July analysis entries (ids F1, F2…), in the same columns."""
+    """Pierre-Gilles' list, the July analysis entries (ids F1, F2…), then the November entries (ids N1, N2…) that
+    are not already one of them, in the same columns. Also returns November id → idea id for the merged ones."""
     ideas = list(csv.DictReader(io.StringIO(fetch(GIST_CSV))))
     for h in ideas:
         h["_source"], h["_native"], h["_note"] = "list", False, ""
@@ -136,12 +152,83 @@ def load_ha_list():
                 "Description": r["description"], "Reference link": r["link"],
                 "_source": "forum", "_native": r["native_gladys"] == "oui", "_note": r["forum_table"],
             })
-    return ideas
+    for h in ideas:
+        h["_nov"], h["_alt_names"], h["_alt_ids"] = [], [], set()
+    merged = merge_november(ideas, list(csv.DictReader(io.StringIO(fetch(NOV_GIST_CSV)))))
+    return ideas, merged
+
+
+def merge_november(ideas, rows):
+    """Adds the November list to the ideas. An entry joins the idea that has its Home Assistant id (when each list
+    has that id once: "wyoming" stands for both Piper and Wyoming in November) or its name; one that could join
+    several ideas stays on its own. data/merge.txt corrects both ways. The others become ideas N1, N2…"""
+    known = {h["#"]: h for h in ideas}
+    by_id, by_name = {}, {}
+    for h in ideas:
+        for i in ha_ids(h) | {h.get("Key", "").lower()} - {""}:
+            by_id.setdefault(i, set()).add(h["#"])
+        for n in ha_names(h):
+            by_name.setdefault(n.replace(" ", ""), set()).add(h["#"])
+    nov_ids = {}
+    for r in rows:
+        if r["ha_domain"]:
+            nov_ids[r["ha_domain"].lower()] = nov_ids.get(r["ha_domain"].lower(), 0) + 1
+    forced = {}
+    for nid, target in read_table(DATA / "merge.txt"):
+        nid = nid.upper()
+        if target != "-" and target.upper() not in known:
+            print(f"merge skipped, unknown idea: {target}", file=sys.stderr)
+            continue
+        forced[nid] = None if target == "-" else target.upper()
+    merged = {}
+    for r in rows:
+        nid = f"N{r['rank']}"
+        domain = r["ha_domain"].lower()
+        if nid in forced:
+            target = forced[nid]
+        else:
+            found = set()
+            if domain and nov_ids[domain] == 1 and len(by_id.get(domain, ())) == 1:
+                found |= by_id[domain]
+            for n in ha_names({"Integration": r["name"]}):
+                if len(by_name.get(n.replace(" ", ""), ())) == 1:
+                    found |= by_name[n.replace(" ", "")]
+            target = found.pop() if len(found) == 1 else None
+        nov = dict(n=nid, prio=r["priority"])
+        extra = dict(_gtype=r["gladys_type"], _seen=r["seen_at"].replace(";", ", "),
+                     _installs=int(r["ha_installs"]) if r["ha_installs"].isdigit() else None)
+        if target:
+            h = known[target]
+            h["_nov"].append(nov)
+            h["_alt_names"].append(r["name"])
+            if domain:
+                h["_alt_ids"].add(domain)
+            for k, v in extra.items():
+                h.setdefault(k, v)
+            merged[nid] = target
+            continue
+        seen = r["seen_at"].split(";")
+        ideas.append({
+            "#": nid, "Priority": r["priority"], "Integration": r["name"],
+            "Category": " / ".join(NOV_CATEGORIES.get(c, c) for c in r["category"].split(";") if c),
+            "HA usage (% of installations)": "", "Access": r["transport"].capitalize(),
+            "No hardware needed": "", "Area": r["countries"].replace(";", ",") or "Worldwide", "Status": "Available",
+            "Description": r["notes"],
+            "Reference link": f"https://www.home-assistant.io/integrations/{domain}/" if domain and "HA" in seen else "",
+            "_source": "nov", "_native": False, "_note": "", "_nov": [nov], "_alt_names": [],
+            "_alt_ids": {domain} - {""}, **extra,
+        })
+    for h in ideas:
+        h["_nov"].sort(key=lambda x: (x["prio"], order(x["n"])))
+    return merged
 
 
 def order(num):
-    """Sort key: the July analysis entries (F1, F2…) first, then the list from 1 to 1190."""
-    return int(num) if num.isdigit() else int(num[1:]) - 100000
+    """Sort key: the July analysis entries (F1, F2…) first, then the October list from 1 to 1190, then the November
+    entries (N1, N2…)."""
+    if num.isdigit():
+        return int(num)
+    return int(num[1:]) + (100000 if num[0] == "N" else -100000)
 
 
 def exists(url):
@@ -320,10 +407,13 @@ def without_domain(name):
 
 
 def ha_names(h):
-    """Names an HA list entry goes by: as written, without its parentheses, and without a domain name."""
-    name = h["Integration"]
-    bare = re.sub(r"\(.*?\)", "", name)
-    return {n for n in (norm(name), norm(bare), norm(without_domain(bare))) if len(n) >= 3}
+    """Names an HA list entry goes by: as written, without its parentheses, and without a domain name; and the same
+    for its name in the November list when it differs."""
+    names = set()
+    for name in [h["Integration"], *h.get("_alt_names", [])]:
+        bare = re.sub(r"\(.*?\)", "", name)
+        names |= {norm(name), norm(bare), norm(without_domain(bare))}
+    return {n for n in names if len(n) >= 3}
 
 
 def ha_parts(h):
@@ -352,9 +442,11 @@ def repo_stem(repo):
     return stem.lower().replace("-", "_")
 
 
-def ha_id(h):
-    """Home Assistant integration id, from the documentation link: .../integrations/bosch_shc/ → bosch_shc."""
-    return h["Reference link"].rstrip("/").split("/")[-1].lower().replace("-", "_")
+def ha_ids(h):
+    """Home Assistant integration ids: from the documentation link (.../integrations/bosch_shc/ → bosch_shc), and the
+    one the November list gives."""
+    link = h["Reference link"].rstrip("/").split("/")[-1].lower().replace("-", "_")
+    return ({link} if link else set()) | {i.replace("-", "_") for i in h.get("_alt_ids", ())}
 
 
 def auto_matches(ha, gladys):
@@ -365,8 +457,9 @@ def auto_matches(ha, gladys):
     for h in ha:
         for n in ha_names(h):
             by_name.setdefault(n, set()).add(h["#"])
-        if "_" in ha_id(h):
-            by_id.setdefault(ha_id(h), set()).add(h["#"])
+        for i in ha_ids(h):
+            if "_" in i:
+                by_id.setdefault(i, set()).add(h["#"])
     # A part of a "A / B" name counts only when it points to that idea alone: "Verisure" in
     # "Securitas Direct / Verisure" is an idea of its own, and "Fire TV" comes up in two ideas.
     parts = {}
@@ -408,7 +501,7 @@ def spaced(text):
     return " " + re.sub(r"[^a-z0-9]+", " ", text).strip() + " "
 
 
-def forum_claims(ha):
+def forum_claims(ha, merged):
     """HA list number → the latest forum post claiming it, read in the text after "je prends", up to the next claim
     or to a phrase saying the idea belongs to someone else:
       - numbers of the list written in the post ("Victron Energy GX (P1 n° 74)") are the most reliable: when a claim
@@ -417,10 +510,11 @@ def forum_claims(ha):
         rather than "Octopus Energy"). A shortened name ("Solcast" for "Solcast PV Forecast") is not read: first
         words mislead too often ("Govee" for Govee Bluetooth, "Transport" for Transport for NSW); data/claims.txt
         covers those."""
-    ids = {h["#"] for h in ha}
+    ids = {h["#"] for h in ha} | set(merged)
     names = []
     for h in ha:
-        full = {spaced(h["Integration"]), spaced(re.sub(r"\(.*?\)", "", h["Integration"]))}
+        full = {spaced(n) for name in [h["Integration"], *h["_alt_names"]]
+                for n in (name, re.sub(r"\(.*?\)", "", name))}
         names += [(name, h["#"]) for name in full if len(name.strip()) >= 4 and name.strip() not in CLAIM_IGNORED]
     claims = {}
     try:
@@ -437,9 +531,11 @@ def forum_claims(ha):
             rest = text[m.end():]
             end = re.search(CLAIM_WORDS + "|" + CLAIM_STOPS, rest)
             part = " " + (rest[:end.start()] if end else rest) + " "
-            # "n° 74", "n°74" ("°" is dropped, not spaced), "nº 74", and the July analysis entries: "n° F39".
+            # "n° 74", "n°74" ("°" is dropped, not spaced), "nº 74", the July analysis entries: "n° F39", and the
+            # November list: "n° N12", which may be an idea of the October list too.
             # "au n° 122", "du n° 241" point to a forum post, not to the list.
-            numbers = [n.upper() for n in re.findall(r"(?<! au)(?<! du) no? ?(f?\d{1,4}) ", part) if n.upper() in ids]
+            numbers = [merged.get(n.upper(), n.upper())
+                       for n in re.findall(r"(?<! au)(?<! du) no? ?([fn]?\d{1,4}) ", part) if n.upper() in ids]
             if numbers:
                 found = set(numbers)
             else:
@@ -454,11 +550,16 @@ def forum_claims(ha):
 
 
 def build():
-    ha = load_ha_list()
+    ha, merged = load_ha_list()
     gladys, index_date = load_gladys()
+
+    def canon(num):
+        """data/ files may name a merged idea by its November number."""
+        return merged.get(num.upper(), num.upper())
 
     mapping, rejected = {}, set()
     for num, repo, quality in read_table(DATA / "mapping.txt"):
+        num = canon(num)
         g = gladys.get(repo.lower())
         if g is None:
             print(f"mapping skipped, unknown repository: {repo}", file=sys.stderr)
@@ -469,13 +570,13 @@ def build():
     for num, g in auto_matches(ha, gladys):
         if (num, g["repo"]) not in rejected and all(x is not g for x, _ in mapping.get(num, [])):
             mapping.setdefault(num, []).append((g, "A"))
-    claims = {num: (who, src) for num, who, src in read_table(DATA / "claims.txt")}
+    claims = {canon(num): (who, src) for num, who, src in read_table(DATA / "claims.txt")}
     # "-" frees an idea whose claim was given up: forum posts and the gist status no longer count for it.
     freed = {num for num, (who, _) in claims.items() if who == "-"}
     # Warnings shown under an idea (terms of use, access restrictions), in French and English.
-    notes = {num: dict(fr=fr, en=en) for num, fr, en in read_table(DATA / "notes.txt")}
-    bluetooth = {num: answer == "oui" for num, answer in read_table(DATA / "bluetooth.txt")}
-    announced = forum_claims(ha)
+    notes = {canon(num): dict(fr=fr, en=en) for num, fr, en in read_table(DATA / "notes.txt")}
+    bluetooth = {canon(num): answer == "oui" for num, answer in read_table(DATA / "bluetooth.txt")}
+    announced = forum_claims(ha, merged)
     try:
         post_dates = {p["post_number"]: p["created_at"][:10] for p in forum_posts()}
     except Exception:
@@ -500,6 +601,9 @@ def build():
             # Several full matches for one idea; a partial match only complements the others.
             dup=sum(1 for _, q in matches if q != "P") > 1,
             warning=notes.get(num),
+            # November list: its numbers and priorities for this idea, best first; the Gladys type of integration,
+            # where the idea was seen, and the installations count.
+            nov=h["_nov"], gtype=h.get("_gtype", ""), seen=h.get("_seen", ""), installs=h.get("_installs"),
         )
         if matches:
             row["status"] = matches[0][0]["status"]
@@ -551,11 +655,15 @@ def build():
     return dict(
         generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         store_index_at=index_date,
-        sources=dict(ha_list=GIST_URL, store=STORE_PAGE, store_index=STORE_INDEX, forum=FORUM_TOPIC,
+        sources=dict(ha_list=GIST_URL, ha_list_nov=NOV_GIST_URL, store=STORE_PAGE, store_index=STORE_INDEX, forum=FORUM_TOPIC,
                      topic=f"https://github.com/topics/{TOPIC}", workflow=WORKFLOW_PAGE),
         ha=ha_rows,
         gladys=gladys_rows,
     )
+
+
+SOURCE_FR = {"list": "Liste d'octobre de Pierre-Gilles", "forum": "Analyse forum de juillet",
+             "nov": "Liste de novembre de Pierre-Gilles"}
 
 
 def flat_tables(data):
@@ -564,7 +672,8 @@ def flat_tables(data):
     head_ha = ["N°", "Prio", "Intégration Home Assistant", "Catégorie", "Usage HA", "Accès",
                "Sans matériel", "Zone", "Doc HA / HACS", "Statut Gladys", "Correspondance",
                "Intégration Gladys", "Auteur", "Dépôt GitHub", "Cover", "Version", "Doublon",
-               "Autres dépôts / note", "Description HA", "Source"]
+               "Autres dépôts / note", "Description HA", "Source", "Liste de novembre", "Type Gladys",
+               "Vu chez", "Installations HA"]
     rows_ha = []
     for h in data["ha"]:
         first = by_repo[h["matches"][0]["repo"]] if h["matches"] else None
@@ -579,7 +688,9 @@ def flat_tables(data):
             f"oui ({len(h['matches'])})" if h["dup"] else "",
             "; ".join(x for x in (", ".join(others) or h["claim"], (h.get("warning") or {}).get("fr", "")) if x),
             h["desc"],
-            "Liste de Pierre-Gilles" if h["source"] == "list" else f"Analyse forum de juillet ({h['note']})",
+            SOURCE_FR[h["source"]] + (f" ({h['note']})" if h["note"] else ""),
+            ", ".join(f"{x['n']} ({x['prio']})" for x in h["nov"]), h["gtype"], h["seen"],
+            h["installs"] if h["installs"] is not None else "",
         ])
     head_g = ["Intégration Gladys", "Auteur", "Dépôt GitHub", "Cover", "Statut", "Type", "Version",
               "Vue depuis", "Dernier push", "Équivalent HA (liste)", "Doublon avec", "Description"]
@@ -596,6 +707,7 @@ def write_xlsx(data, tables, path):
     (head_ha, rows_ha), (head_g, rows_g) = tables
     ideas = [h for h in data["ha"] if h["source"] == "list"]
     july = [h for h in data["ha"] if h["source"] == "forum"]
+    nov = [h for h in data["ha"] if h["nov"]]
     n_taken = sum(1 for h in ideas if h["status"] != FREE)
     p1 = [h for h in ideas if h["prio"] == "P1"]
     n_dup = sum(1 for g in data["gladys"] if g["dups"])
@@ -615,6 +727,9 @@ def write_xlsx(data, tables, path):
         ["Liste Home Assistant (gist de Pierre-Gilles)",
          f"{len(ideas)} idées, dont {n_taken} prises ou faites ; "
          f"P1 : {sum(1 for h in p1 if h['status'] != FREE)} / {len(p1)}"],
+        ["Liste de novembre (N1, N2…)",
+         f"{len(nov)} idées, dont {sum(1 for h in nov if h['source'] != 'nov')} déjà dans la liste d'octobre "
+         f"(gardées sous leur numéro d'octobre) ; {sum(1 for h in nov if h['status'] != FREE)} prises ou faites"],
         ["Analyse forum de juillet (F1, F2…)",
          f"{len(july)} intégrations populaires que la liste a retirées car Gladys les couvrait déjà ; "
          f"{sum(1 for h in july if h['status'] != FREE)} couvertes"],
@@ -638,15 +753,17 @@ def write_xlsx(data, tables, path):
                        "couvrait déjà, et certaines n'existent pas chez HA"],
         [],
         ["Sources"],
-        ["Liste Home Assistant", link(GIST_URL)],
+        ["Liste Home Assistant (octobre)", link(GIST_URL)],
+        ["Liste de novembre", link(NOV_GIST_URL)],
         ["Store Gladys", link(STORE_PAGE)],
         ["Fil forum", link(FORUM_TOPIC)],
         ["Dépôts GitHub", link(f"https://github.com/topics/{TOPIC}", f"topic {TOPIC}")],
     ]:
         ws.append(r)
     ws["A1"].font = Font(bold=True, size=14)
-    for cell in ("A8", "A18"):
-        ws[cell].font = Font(bold=True)
+    for row in ws.iter_rows(min_col=1, max_col=1):
+        if row[0].value in ("Statuts", "Sources"):
+            row[0].font = Font(bold=True)
     ws.column_dimensions["A"].width = 42
     ws.column_dimensions["B"].width = 110
 
@@ -655,7 +772,7 @@ def write_xlsx(data, tables, path):
              STATUS_FR[NATIVE]: "D9E1F2"}
     sheets = [
         ("Liste HA ↔ Gladys", head_ha, rows_ha, 9, {8: "doc", 13: None}, 14,
-         [6, 5, 34, 24, 9, 12, 9, 14, 6, 26, 13, 26, 16, 38, 22, 9, 10, 34, 60, 30]),
+         [6, 5, 34, 24, 9, 12, 9, 14, 6, 26, 13, 26, 16, 38, 22, 9, 10, 34, 60, 30, 16, 14, 18, 12]),
         ("Intégrations Gladys", head_g, rows_g, 4, {2: None}, 3,
          [28, 16, 40, 22, 26, 13, 9, 11, 11, 40, 30, 70]),
     ]
@@ -700,9 +817,13 @@ def main():
 
     n_taken = sum(1 for h in data["ha"] if h["status"] != FREE and h["source"] == "list")
     july = [h for h in data["ha"] if h["source"] == "forum"]
+    nov = [h for h in data["ha"] if h["source"] == "nov"]
+    n_merged = sum(len(h["nov"]) for h in data["ha"] if h["source"] != "nov")
     n_dup = sum(1 for g in data["gladys"] if g["dups"])
     unmapped = [g["repo"] for g in data["gladys"] if not g["ha"] and g["status"] != STORE]
-    print(f"{len(data['ha']) - len(july)} HA ideas ({n_taken} taken), "
+    print(f"{len(data['ha']) - len(july) - len(nov)} HA ideas ({n_taken} taken), "
+          f"{len(nov)} new November ideas ({sum(1 for h in nov if h['status'] != FREE)} taken, "
+          f"{n_merged} other November entries merged into existing ideas), "
           f"{len(july)} July entries ({sum(1 for h in july if h['status'] != FREE)} covered), {len(data['gladys'])} Gladys repositories, "
           f"{n_dup} duplicated Gladys integrations; {len(unmapped)} repositories outside the store and not mapped")
 
