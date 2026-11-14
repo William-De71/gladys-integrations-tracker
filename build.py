@@ -81,6 +81,7 @@ CLAIM_IGNORED = {"youtube", "github"}
 CLAIM_WINDOW = 500
 # Status posts list ideas without claiming them.
 CLAIM_AUTHORS_IGNORED = {"pierre-gilles"}
+SENTENCE_END = "zzfinzz"
 TOPIC = "gladys-assistant-integration"
 # Claims an integration without the store topic: the store would list an empty repository with it.
 WIP_TOPIC = "gladys-integration-wip"
@@ -116,7 +117,8 @@ BLUETOOTH = re.compile(r"bluetooth|\bBLE\b", re.I)
 
 
 def fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    # The forum serves machine translations to English by default: the claims are read in the original French.
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept-Language": "fr"})
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.read().decode("utf-8")
 
@@ -501,6 +503,24 @@ def spaced(text):
     return " " + re.sub(r"[^a-z0-9]+", " ", text).strip() + " "
 
 
+def list_numbers(m, text, words):
+    """List numbers in parentheses ("Tessie : … (N78)", "(ligne N10)", "(N26, N47)") become "n° N78", read like the
+    numbers written with "n°". A bare number may be a November one without its "N" ("Google Chat (181)" is N181,
+    181 being Xiaomi Gateway 3): it only counts when a word of the idea's name comes just before the parenthesis,
+    trying N181 when 181 does not fit."""
+    if not re.fullmatch(r"(?:lignes?|n°|et|and|,|\s|[FfNn]?\d{1,4}\b)+", m.group(1)):
+        return m.group(0)
+    before = set(spaced(text[max(0, m.start() - 120):m.start()]).split())
+    found = []
+    for n in re.findall(r"\b[FfNn]?\d{1,4}\b", m.group(1)):
+        n = n.upper()
+        if not n.isdigit():
+            found.append(n)
+        else:
+            found += [x for x in (n, "N" + n) if words.get(x, set()) & before][:1]
+    return " ".join(f" n° {n} " for n in found) or " "
+
+
 def forum_claims(ha, merged):
     """HA list number → the latest forum post claiming it, read in the text after "je prends", up to the next claim
     or to a phrase saying the idea belongs to someone else:
@@ -516,6 +536,13 @@ def forum_claims(ha, merged):
         full = {spaced(n) for name in [h["Integration"], *h["_alt_names"]]
                 for n in (name, re.sub(r"\(.*?\)", "", name))}
         names += [(name, h["#"]) for name in full if len(name.strip()) >= 4 and name.strip() not in CLAIM_IGNORED]
+    # Words of each idea's names, to check the list numbers written in parentheses.
+    words = {}
+    for h in ha:
+        for name in [h["Integration"], *h["_alt_names"]]:
+            words.setdefault(h["#"], set()).update(w for w in spaced(name).split() if len(w) >= 4)
+    for n, target in merged.items():
+        words.setdefault(n, set()).update(words.get(target, ()))
     claims = {}
     try:
         posts = forum_posts()
@@ -526,16 +553,26 @@ def forum_claims(ha, merged):
         if p["username"] in CLAIM_AUTHORS_IGNORED:
             continue
         cooked = re.sub(r'<aside class="quote.*?</aside>', " ", p["cooked"], flags=re.S)
-        text = spaced(html.unescape(re.sub(r"<[^>]+>", " ", cooked)))
+        text = html.unescape(re.sub(r"<[^>]+>", " ", cooked))
+        text = re.sub(r"\(([^()]{1,40})\)", lambda m: list_numbers(m, text, words), text)
+        # Sentence ends survive the spacing as a marker word.
+        text = spaced(re.sub(r"[.;!?]+(?=\s|$)", f" {SENTENCE_END} ", text))
         for m in re.finditer(CLAIM_WORDS, text):
             rest = text[m.end():]
-            end = re.search(CLAIM_WORDS + "|" + CLAIM_STOPS, rest)
-            part = " " + (rest[:end.start()] if end else rest) + " "
+            nxt = re.search(CLAIM_WORDS, rest)
+            claim = rest[:nxt.start()] if nxt else rest
+            # Names stop at a phrase giving an idea to someone else ("la France reste chez gladys-holidays"); the
+            # numbers only skip the sentence that holds it, since the list often goes on after it.
+            stop = re.search(CLAIM_STOPS, claim)
+            part = " " + (claim[:stop.start()] if stop else claim).replace(f" {SENTENCE_END} ", " ") + " "
+            after = claim[stop.end():].split(f" {SENTENCE_END} ", 1)[1:] if stop else []
+            kept = part + " ".join(s for s in "".join(after).split(f" {SENTENCE_END} ")
+                                   if not re.search(CLAIM_STOPS, f" {s} "))
             # "n° 74", "n°74" ("°" is dropped, not spaced), "nº 74", the July analysis entries: "n° F39", and the
             # November list: "n° N12", which may be an idea of the October list too.
             # "au n° 122", "du n° 241" point to a forum post, not to the list.
             numbers = [merged.get(n.upper(), n.upper())
-                       for n in re.findall(r"(?<! au)(?<! du) no? ?([fn]?\d{1,4}) ", part) if n.upper() in ids]
+                       for n in re.findall(r"(?<! au)(?<! du) no? ?([fn]?\d{1,4}) ", f" {kept} ") if n.upper() in ids]
             if numbers:
                 found = set(numbers)
             else:

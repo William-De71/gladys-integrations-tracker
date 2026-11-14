@@ -370,3 +370,15 @@ N265|guim31/gladys-fuel-es-it|E
 N277|guim31/gladys-qualite-eau|E
 N285|William-De71/gladys-anniversaries|E
 N301|gboulvin/Gladys-EPEX-Spot|P
+587|LM1LC3N7/gladys-airtouch5|E
+516|LM1LC3N7/gladys-loqed|E
+534|LM1LC3N7/gladys-telldus|E
+1010|LM1LC3N7/gladys-telldus|E
+954|LM1LC3N7/gladys-nobo|E
+N179|guim31/gladys-entretien|E
+N239|guim31/gladys-medicaments|E
+N182|LM1LC3N7/gladys-threema|E
+N168|LM1LC3N7/gladys-azure-speech|E
+N203|LM1LC3N7/gladys-gira|E
+N915|guim31/gladys-prometheus|E
+N280|quentinlegay/gladys-notion-calendar|P
