@@ -350,3 +350,23 @@ N2|guim31/gladys-wyoming|E
 N3|guim31/gladys-local-lists|E
 N9|guim31/gladys-local-ai|E
 N41|guim31/gladys-local-ai|E
+# 2026-11-14 : liste de novembre, intégrations publiées sous un autre nom (vérifié sur la description du manifeste).
+N26|LM1LC3N7/gladys-myelectricaldata|P
+N297|LM1LC3N7/gladys-myelectricaldata|P
+N31|LM1LC3N7/gladys-octopus-germany|E
+N32|LM1LC3N7/gladys-netzentgelte-14a|E
+N33|LM1LC3N7/gladys-elcom|E
+N35|LM1LC3N7/gladys-nettleie|E
+N36|LM1LC3N7/gladys-openei-urdb|E
+N39|guim31/gladys-opower|P
+N45|William-De71/gladys-outlook-calendar|E
+N46|guim31/gladys-location-saisonniere|E
+N68|William-De71/gladys-enedis-outages|E
+N76|prohand/gladys-uvindex|P
+N77|guim31/gladys-sip|E
+N157|prohand/gladys-electricity-maps|P
+N264|guim31/gladys-fuel-es-it|E
+N265|guim31/gladys-fuel-es-it|E
+N277|guim31/gladys-qualite-eau|E
+N285|William-De71/gladys-anniversaries|E
+N301|gboulvin/Gladys-EPEX-Spot|P
