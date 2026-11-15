@@ -383,3 +383,4 @@ N203|LM1LC3N7/gladys-gira|E
 N915|guim31/gladys-prometheus|E
 N280|quentinlegay/gladys-notion-calendar|P
 N595|William-De71/gladys-lunar-gardening-calendar|E
+N789|William-De71/gladys-effis|E
