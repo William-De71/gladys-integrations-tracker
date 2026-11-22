@@ -385,3 +385,6 @@ N280|quentinlegay/gladys-notion-calendar|P
 N595|William-De71/gladys-lunar-gardening-calendar|E
 N789|William-De71/gladys-effis|E
 N909|William-De71/gladys-sowing-calendar|E
+N204|guim31/gladys-siemens-s7|E
+N298|William-De71/gladys-solar-router|E
+N172|guim31/gladys-location-saisonniere|P
