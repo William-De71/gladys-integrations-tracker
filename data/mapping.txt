@@ -452,3 +452,4 @@ N809|guim31/gladys-imap|P
 N946|guim31/gladys-emsc|P
 N220|William-De71/gladys-syr-safetech|P
 N22|William-De71/gladys-ovhcloud-ai-endpoints|E
+N857|William-De71/gladys-whoop|E
